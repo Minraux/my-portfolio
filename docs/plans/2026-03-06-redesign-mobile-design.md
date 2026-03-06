@@ -70,7 +70,7 @@ Mobile / Desktop:
 
 ## Соцсети — иконки
 
-Три платформы: **Telegram, Instagram, Bandcamp**
+Три платформы: **Telegram, Instagram, YouTube**
 Реализация: inline SVG-компонент `SocialIcon`, иконки нарисованы вручную (минималистично, 20×20px viewBox)
 
 ## Изменения в Sanity-схеме
@@ -90,7 +90,7 @@ defineField({
 Добавить поле `icon` в объект соцсети:
 ```ts
 { name: 'icon', type: 'string', title: 'Иконка', options: {
-  list: ['telegram', 'instagram', 'bandcamp']
+  list: ['telegram', 'instagram', 'youtube']
 }}
 ```
 
