@@ -3,11 +3,15 @@
 @theme {
   --font-sans: var(--font-onest);
   --font-serif: var(--font-cormorant);
-  --color-accent: oklch(85% 0.25 95);
-  --color-bg: oklch(10% 0 0);
+  --color-accent: oklch(72% 0.12 55);
+  --color-bg: oklch(14% 0.008 60);
+  --color-hero-fallback: oklch(96% 0.02 85);
+  --color-text: oklch(95% 0 0);
+  --color-muted: oklch(60% 0 0);
 }
 
 body {
   background-color: var(--color-bg);
   font-family: var(--font-sans);
+  color: var(--color-text);
 }
