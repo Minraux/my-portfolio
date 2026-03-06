@@ -2,11 +2,27 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Сделать сайт mobile-first: адаптивный хедер с бургером, герой с фото на весь экран, корректная типографика, минималистичные иконки соцсетей, форма обратной связи через Resend.
+**Goal:** Сделать сайт mobile-first: три чётких брейкпоинта (Mobile/Tablet/Desktop), адаптивный хедер с бургером, герой с фото на весь экран, корректная типографика, минималистичные иконки соцсетей, форма обратной связи через Resend, переименование раздела «Педагогика» → «Источник».
 
 **Architecture:** Все изменения в существующих файлах Next.js 15 + один новый компонент SocialIcon + новая страница /contact + API route для Resend. Схема Sanity расширяется полем heroImage в settings.
 
 **Tech Stack:** Next.js 15, Tailwind CSS v4, Framer Motion, Sanity v3, Resend, TypeScript
+
+---
+
+## Система брейкпоинтов
+
+Tailwind CSS v4 использует стандартные брейкпоинты. В этом проекте:
+
+| Устройство | Диапазон      | Tailwind префикс | Поведение                               |
+|------------|---------------|------------------|-----------------------------------------|
+| Mobile     | < 768px       | (default)        | 1 колонка, бургер-меню, уменьшенные отступы |
+| Tablet     | 768px–1023px  | `md:`            | 2 колонки, бургер-меню, средние отступы |
+| Desktop    | ≥ 1024px      | `lg:`            | 2–3 колонки, полная навигация, полные отступы |
+
+**Правило:** бургер-меню показывается на Mobile + Tablet (< `lg`), полная навигация — только на Desktop (≥ `lg`).
+
+Изменить брейкпоинт бургера с `md` на `lg` во всех компонентах.
 
 ---
 
@@ -350,7 +366,7 @@ export default function Header({ name }: { name: string }) {
         </Link>
 
         {/* Десктоп навигация */}
-        <nav className="hidden md:flex gap-6">
+        <nav className="hidden lg:flex gap-6">
           {links.map(link => (
             <Link
               key={link.href}
@@ -368,7 +384,7 @@ export default function Header({ name }: { name: string }) {
         <button
           onClick={() => setIsOpen(v => !v)}
           aria-label={isOpen ? 'Закрыть меню' : 'Открыть меню'}
-          className="md:hidden flex flex-col gap-1.5 p-1 text-white"
+          className="lg:hidden flex flex-col gap-1.5 p-1 text-white"
         >
           <span className={`block w-6 h-px bg-current transition-transform duration-300 origin-center ${isOpen ? 'translate-y-[5px] rotate-45' : ''}`} />
           <span className={`block w-6 h-px bg-current transition-opacity duration-300 ${isOpen ? 'opacity-0' : ''}`} />
@@ -378,7 +394,7 @@ export default function Header({ name }: { name: string }) {
 
       {/* Мобильное меню оверлей */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 md:hidden flex flex-col justify-center items-center"
+        <div className="fixed inset-0 z-40 lg:hidden flex flex-col justify-center items-center"
           style={{ backgroundColor: 'var(--color-bg)' }}
         >
           <nav className="flex flex-col items-center gap-8">
@@ -694,14 +710,60 @@ Vercel Dashboard → Redeploy.
 
 ---
 
+---
+
+### Task 10: Переименовать раздел «Педагогика» → «Источник» и перенести маршрут
+
+**Files:**
+- Rename folder: `app/(site)/teaching/` → `app/(site)/istochnik/`
+- Modify: `components/Header.tsx` (после Task 5)
+
+**Что делаем:**
+Переименовываем папку, обновляем href в навигации. URL и страница меняются: `/teaching` → `/istochnik`.
+
+**Step 1: Переименовать папку маршрута**
+
+```bash
+mv app/(site)/teaching app/(site)/istochnik
+```
+
+**Step 2: Обновить ссылку в Header.tsx**
+
+```tsx
+// В массиве links — найти и заменить:
+// было:
+{ href: '/teaching', label: 'Педагогика' },
+// стало:
+{ href: '/istochnik', label: 'Источник' },
+```
+
+**Step 3: Проверить**
+
+```bash
+npm run dev
+```
+
+Открыть http://localhost:3000/istochnik — страница открывается, http://localhost:3000/teaching — 404.
+
+**Step 4: Commit**
+
+```bash
+git add app/(site)/istochnik/ components/Header.tsx
+git rm -r app/(site)/teaching/
+git commit -m "feat: rename teaching section to istochnik with new route /istochnik"
+```
+
+---
+
 ## Порядок выполнения
 
-1. Task 1 — цвета (быстро, изолированно)
+1. Task 1 — цвета
 2. Task 2 — Sanity схема + запрос
 3. Task 3 — SocialIcon компонент
 4. Task 4 — герой (зависит от Task 2 + 3)
-5. Task 5 — бургер-меню (независимо)
-6. Task 6 — типографика (независимо)
+5. Task 5 — бургер-меню (брейкпоинт `lg`, три уровня: Mobile/Tablet/Desktop)
+6. Task 6 — типографика
 7. Task 7 — страница /contact
 8. Task 8 — API route (зависит от Task 7)
-9. Task 9 — деплой
+9. Task 10 — переименование /teaching → /istochnik
+10. Task 9 — деплой
