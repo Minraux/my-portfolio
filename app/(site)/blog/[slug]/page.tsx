@@ -32,12 +32,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             {new Date(post.publishedAt).toLocaleDateString('ru-RU')}
           </p>
         )}
-        <h1 className="font-sans text-[clamp(2rem,5vw,4rem)] font-bold uppercase mb-12">
+        <h1 className="font-sans text-[clamp(1.5rem,4vw,3.5rem)] font-bold uppercase mb-8">
           {post.title}
         </h1>
       </FadeIn>
       <FadeIn delay={0.1}>
-        <div className="font-serif text-xl text-white/80 leading-relaxed [&_p]:mb-6 [&_h2]:font-sans [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-12 [&_h2]:mb-4">
+        <div className="font-serif text-base md:text-xl text-white/80 leading-relaxed [&_p]:mb-6 [&_h2]:font-sans [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-12 [&_h2]:mb-4">
           <PortableText value={post.body} components={components} />
         </div>
       </FadeIn>

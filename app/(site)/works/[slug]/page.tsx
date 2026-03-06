@@ -19,7 +19,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
         <p className="font-sans text-sm uppercase tracking-widest text-white/40 mb-4">
           {work.type} {work.year && `— ${work.year}`} {work.location && `— ${work.location}`}
         </p>
-        <h1 className="font-sans text-[clamp(2rem,5vw,5rem)] font-bold uppercase mb-8">
+        <h1 className="font-sans text-[clamp(1.5rem,4vw,4rem)] font-bold uppercase mb-6">
           {work.title}
         </h1>
       </FadeIn>
