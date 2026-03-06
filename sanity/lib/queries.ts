@@ -48,5 +48,9 @@ export async function getAllTeaching() {
 }
 
 export async function getSettings() {
-  return client.fetch(`*[_type == "settings"][0] { name, email, socials }`)
+  return client.fetch(`*[_type == "settings"][0] {
+    name, email,
+    "heroImage": heroImage { ..., "url": asset->url },
+    socials[] { label, url, icon }
+  }`)
 }
