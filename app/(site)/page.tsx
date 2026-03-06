@@ -52,6 +52,7 @@ export default async function HomePage() {
           {settings?.socials?.length > 0 && (
             <FadeIn delay={0.2}>
               <div className="flex gap-5 mt-6">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {settings.socials.map((s: any) => (
                   <a
                     key={s.url}
@@ -80,6 +81,7 @@ export default async function HomePage() {
             </h2>
           </FadeIn>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {works.map((work: any, i: number) => (
               <FadeIn key={work._id} delay={i * 0.1}>
                 <WorkCard work={work} />

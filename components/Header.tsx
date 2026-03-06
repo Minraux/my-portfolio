@@ -16,6 +16,7 @@ export default function Header({ name }: { name: string }) {
   const [isOpen, setIsOpen] = useState(false)
 
   // Закрывать при переходе на другую страницу
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setIsOpen(false) }, [pathname])
 
   // Блокировать скролл когда меню открыто
