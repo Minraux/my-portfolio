@@ -22,7 +22,7 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - `/publications` — публикации (список + канвас), `/publications/[slug]` — статья
 - `/source` — раздел «Источник» (манифест о бережном образовании)
 - `/about` — биография + фото + CV PDF
-- `/contact` — email + соцсети + форма (ContactForm → `/api/contact`)
+- `/contact` — email + соцсети (без формы)
 - `/studio` — Sanity Studio
 - `/api/contact` — Resend email handler
 - `/api/revalidate` — ISR endpoint (POST, защищён REVALIDATE_SECRET)
@@ -32,8 +32,8 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - `Header` — фиксированный, pill-навигация с горизонтальным скроллом, прозрачный на главной до скролла
 - `Footer` / `ConditionalFooter` — соцсети + копирайт
 - `SocialIcon` — SVG иконки: telegram, instagram, youtube
-- `ContactForm` — форма (client component, /api/contact)
-- `WorksCanvas` / `PublicationsCanvas` — интерактивный канвас (md+)
+- `ContactForm` — форма (client component, не используется на /contact)
+- `WorksCanvas` / `PublicationsCanvas` — интерактивный канвас (desktop ≥768px): pill-элементы с позиционированием из Sanity (canvasTop/canvasLeft, %), превью-картинка по ховеру (направление зависит от позиции)
 - `FadeIn` / `PageTransition` — Framer Motion анимации
 
 ## Environment Variables
@@ -42,12 +42,15 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - `NEXT_PUBLIC_SANITY_DATASET` — датасет (production)
 - `SANITY_API_TOKEN` — токен Sanity API
 - `REVALIDATE_SECRET` — секрет для ISR
-- `RESEND_API_KEY` — ключ Resend для отправки писем с формы контактов
+- `RESEND_API_KEY` — не нужен (форма заменена на email-ссылку)
 
 ## Content (Sanity types)
 
 `work`, `post`, `source`, `about`, `settings`.
-Settings содержит: `name`, `email`, `heroImage` (фото главной), `heroEnabled`, `socials[]` (label/url/icon), `seo`.
+- `work`: title, slug, type, mediaType, year, location, images, body, featured, **hidden**, canvasTop, canvasLeft, seo
+- `post`: title, slug, publishedAt, body, tags, excerpt, coverImage, **hidden**, canvasTop, canvasLeft, seo
+- `settings`: name, email, heroImage, heroEnabled, socials[](label/url/icon: telegram/instagram/youtube), seo
+- Canvas позиционирование: поля `canvasTop`/`canvasLeft` (%, строка) — задают позицию пилюли на холсте. Пустые = авторасстановка.
 
 ## Breakpoints
 
