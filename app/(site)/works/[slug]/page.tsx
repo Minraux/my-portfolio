@@ -96,10 +96,9 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
           {work.location && (
-            <div style={{ marginBottom: 20 }}>
+            <div>
               <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 4 }}>Место</p>
               <p style={{ fontSize: 15 }}>{work.location}</p>
-              <div style={{ borderTop: '1px solid #1e1e1e', marginTop: 20 }} />
             </div>
           )}
         </div>

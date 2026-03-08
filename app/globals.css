@@ -110,14 +110,16 @@ a.text-link:hover {
 @media (max-width: 767px) {
   .detail-grid {
     grid-template-columns: 1fr;
+    margin-bottom: 0;
   }
   .detail-grid-left {
     padding-right: 0 !important;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
   .detail-grid-right {
     padding-left: 0 !important;
     border-left: none !important;
+    margin-bottom: 24px;
   }
 }
 

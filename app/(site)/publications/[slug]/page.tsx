@@ -82,7 +82,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
           {post.tags?.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
+            <div>
               <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 8 }}>Теги</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {post.tags.map((tag: string) => (
@@ -100,7 +100,6 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   </span>
                 ))}
               </div>
-              <div style={{ borderTop: '1px solid #1e1e1e', marginTop: 20 }} />
             </div>
           )}
         </div>
