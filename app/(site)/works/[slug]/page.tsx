@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import { notFound } from 'next/navigation'
 import { PortableText } from '@portabletext/react'
 import { getWork, getAllWorks } from '@/sanity/lib/queries'

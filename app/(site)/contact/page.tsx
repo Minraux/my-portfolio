@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import type { Metadata } from 'next'
 import { getSettings } from '@/sanity/lib/queries'
 

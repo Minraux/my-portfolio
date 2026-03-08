@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import type { Metadata } from 'next'
 import WorksCanvas from '@/components/WorksCanvas'
 import { getAllWorks, getSettings } from '@/sanity/lib/queries'

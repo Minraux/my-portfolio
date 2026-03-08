@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import { getFeaturedWorks, getLatestPosts, getSettings } from '@/sanity/lib/queries'

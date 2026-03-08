@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import type { Metadata } from 'next'
 import { getAllPosts, getSettings } from '@/sanity/lib/queries'
 import PublicationsCanvas from '@/components/PublicationsCanvas'
