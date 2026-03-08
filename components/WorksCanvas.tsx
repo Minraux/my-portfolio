@@ -147,7 +147,7 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
               {work.image?.url && (
                 <div style={{
                   position: 'absolute',
-                  bottom: '110%',
+                  ...(positions[i].top < 170 ? { top: '110%' } : { bottom: '110%' }),
                   left: 0,
                   width: 200,
                   height: 150,

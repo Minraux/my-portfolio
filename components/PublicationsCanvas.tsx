@@ -136,7 +136,7 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
                 {post.coverImage?.url && (
                   <div style={{
                     position: 'absolute',
-                    bottom: '110%',
+                    ...(positions[i].top < 170 ? { top: '110%' } : { bottom: '110%' }),
                     left: 0,
                     width: 200,
                     height: 150,
