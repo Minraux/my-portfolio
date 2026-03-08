@@ -19,6 +19,8 @@ export const post = defineType({
       ],
     }),
     defineField({ name: 'hidden', title: 'Скрыть с сайта', type: 'boolean', initialValue: false }),
+    defineField({ name: 'canvasTop', title: 'Позиция на холсте (сверху, %)', type: 'string' }),
+    defineField({ name: 'canvasLeft', title: 'Позиция на холсте (слева, %)', type: 'string' }),
     defineField({ name: 'tags', title: 'Теги', type: 'array', of: [{ type: 'string' }] }),
     defineField({ name: 'excerpt', title: 'Лид (до 150 символов)', type: 'text', rows: 2 }),
     defineField({ name: 'coverImage', title: 'Обложка', type: 'image', options: { hotspot: true } }),

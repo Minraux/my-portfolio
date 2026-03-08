@@ -10,6 +10,8 @@ type Post = {
   slug: { current: string }
   publishedAt?: string
   excerpt?: string
+  canvasTop?: string
+  canvasLeft?: string
   coverImage?: { url: string; [key: string]: any }
 }
 
@@ -26,6 +28,13 @@ function seededRandom(seed: number) {
 function calcPositions(posts: Post[], W: number, H: number) {
   const placed: { top: number; left: number; w: number; h: number }[] = []
   return posts.map((post, i) => {
+    if (post.canvasTop && post.canvasLeft) {
+      return {
+        top: (parseFloat(post.canvasTop) / 100) * H,
+        left: (parseFloat(post.canvasLeft) / 100) * W,
+      }
+    }
+
     const pillW = Math.min(post.title.length * 9 + 48, 420)
     const pillH = 38
 
@@ -79,7 +88,7 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
 
     const W = window.innerWidth
     const H = window.innerHeight - 96
-    const key = `pub-canvas-${posts.map(p => p._id).join('')}-${W}`
+    const key = `pub-canvas-${posts.map(p => `${p._id}${p.canvasTop ?? ''}${p.canvasLeft ?? ''}`).join('')}-${W}`
 
     try {
       const cached = localStorage.getItem(key)

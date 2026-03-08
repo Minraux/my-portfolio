@@ -95,7 +95,7 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
     // window dimensions надёжнее offsetHeight при первом рендере
     const W = window.innerWidth
     const H = window.innerHeight - 96 // header ~48px + footer ~48px
-    const key = `canvas-${works.map(w => w._id).join('')}-${W}`
+    const key = `canvas-${works.map(w => `${w._id}${w.canvasTop ?? ''}${w.canvasLeft ?? ''}`).join('')}-${W}`
 
     try {
       const cached = localStorage.getItem(key)

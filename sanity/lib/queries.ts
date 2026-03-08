@@ -30,7 +30,7 @@ export async function getWork(slug: string) {
 
 export async function getAllPosts() {
   return client.fetch(`*[_type == "post" && hidden != true] | order(publishedAt desc) {
-    _id, title, slug, publishedAt, tags, excerpt,
+    _id, title, slug, publishedAt, tags, excerpt, canvasTop, canvasLeft,
     "coverImage": coverImage { ..., "url": asset->url }
   }`)
 }
