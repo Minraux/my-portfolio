@@ -10,33 +10,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-Next.js 15 App Router. Публичный сайт в `app/(site)/`, Sanity Studio в `app/studio/[[...tool]]/`.
+Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Studio в `app/studio/[[...tool]]/`.
 Контент: Sanity v3, запросы на GROQ в `sanity/lib/queries.ts`, схемы в `sanity/schemas/`.
-Анимации: Framer Motion — `FadeIn` (scroll, whileInView) и `PageTransition` (смена страниц, AnimatePresence) в `components/`.
-Шрифты: Onest (заголовки, --font-sans) + Cormorant (текст, --font-serif), оба с кириллицей, подключены через `next/font/google`.
+Стили: Tailwind CSS v4 (`@import "tailwindcss"`) + CSS-классы в `app/globals.css` (nav-pill, detail-grid, about-grid и др.)
+Шрифты: Onest (`--font-sans`) + Cormorant (`--font-serif`), оба с кириллицей, `next/font/google`.
 
 ## Pages
 
-- `/` — главная (hero + избранные работы из Sanity)
-- `/works` — все работы, `/works/[slug]` — детальная (embed/link/file медиа)
-- `/about` — биография (PortableText) + фото + CV PDF
-- `/teaching` — курсы и мастер-классы
-- `/blog` — список статей, `/blog/[slug]` — статья (PortableText с embed)
-- `/studio` — Sanity Studio (приватно)
+- `/` — главная: hero с фото (фиксированный фон) + список работ + публикации
+- `/works` — список работ (канвас на md+, список на mobile), `/works/[slug]` — детальная
+- `/publications` — публикации (список + канвас), `/publications/[slug]` — статья
+- `/source` — раздел «Источник» (манифест о бережном образовании)
+- `/about` — биография + фото + CV PDF
+- `/contact` — email + соцсети + форма (ContactForm → `/api/contact`)
+- `/studio` — Sanity Studio
+- `/api/contact` — Resend email handler
 - `/api/revalidate` — ISR endpoint (POST, защищён REVALIDATE_SECRET)
+
+## Key Components
+
+- `Header` — фиксированный, pill-навигация с горизонтальным скроллом, прозрачный на главной до скролла
+- `Footer` / `ConditionalFooter` — соцсети + копирайт
+- `SocialIcon` — SVG иконки: telegram, instagram, youtube
+- `ContactForm` — форма (client component, /api/contact)
+- `WorksCanvas` / `PublicationsCanvas` — интерактивный канвас (md+)
+- `FadeIn` / `PageTransition` — Framer Motion анимации
 
 ## Environment Variables
 
 - `NEXT_PUBLIC_SANITY_PROJECT_ID` — ID проекта Sanity (afz3cq75)
 - `NEXT_PUBLIC_SANITY_DATASET` — датасет (production)
-- `SANITY_API_TOKEN` — токен Sanity API (для записи, нужен для деплоя)
-- `REVALIDATE_SECRET` — секрет для ISR webhook
+- `SANITY_API_TOKEN` — токен Sanity API
+- `REVALIDATE_SECRET` — секрет для ISR
+- `RESEND_API_KEY` — ключ Resend для отправки писем с формы контактов
 
 ## Content (Sanity types)
 
-`work`, `post`, `about`, `teaching`, `settings`.
-ISR-ревалидация через `POST /api/revalidate?secret=...` — настраивается как webhook в Sanity Dashboard (API → Webhooks).
+`work`, `post`, `source`, `about`, `settings`.
+Settings содержит: `name`, `email`, `heroImage` (фото главной), `heroEnabled`, `socials[]` (label/url/icon), `seo`.
 
-## Next.js 15 notes
+## Breakpoints
 
-Dynamic route params are a Promise: use `params: Promise<{ slug: string }>` and `const { slug } = await params`.
+- Mobile: < 768px — 1 колонка, горизонтальный скролл навигации
+- Tablet: 768–1023px — 2 колонки
+- Desktop: ≥ 1024px — полный вид, канвас в works/publications
+
+## Next.js notes
+
+Dynamic route params are a Promise: `params: Promise<{ slug: string }>`, `const { slug } = await params`.
