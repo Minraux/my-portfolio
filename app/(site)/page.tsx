@@ -1,95 +1,134 @@
-import FadeIn from '@/components/FadeIn'
-import WorkCard from '@/components/WorkCard'
-import SocialIcon from '@/components/SocialIcon'
-import { getFeaturedWorks, getSettings } from '@/sanity/lib/queries'
+import Link from 'next/link'
+import Footer from '@/components/Footer'
+import { getFeaturedWorks, getLatestPosts, getSettings } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
 
+const typeLabels: Record<string, string> = {
+  audio: 'Аудио',
+  video: 'Видео',
+  installation: 'Инсталляция',
+  performance: 'Перформанс',
+}
+
 export default async function HomePage() {
-  const [works, settings] = await Promise.all([getFeaturedWorks(), getSettings()])
-  const hasPhoto = !!settings?.heroImage?.url
-  const photoUrl = hasPhoto ? urlFor(settings.heroImage).width(1600).url() : null
+  const [works, posts, settings] = await Promise.all([
+    getFeaturedWorks(),
+    getLatestPosts(),
+    getSettings(),
+  ])
+
+  const heroEnabled = settings?.heroEnabled !== false && !!settings?.heroImage?.url
+  const photoUrl = heroEnabled ? urlFor(settings.heroImage).width(1600).url() : null
 
   return (
-    <div>
-      {/* Hero */}
-      <section
-        className="relative min-h-[100svh] flex flex-col justify-end"
-        style={!hasPhoto ? { backgroundColor: 'var(--color-hero-fallback)' } : undefined}
-      >
-        {/* Фото */}
-        {photoUrl && (
-          <>
-            <img
-              src={photoUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {/* Оверлей */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-          </>
+    <div style={{
+      position: 'relative',
+      minHeight: 'calc(100svh - 3rem)',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+
+      {/* Hero фото — фиксированный фон */}
+      {photoUrl && (
+        <>
+          <img
+            src={photoUrl}
+            alt=""
+            style={{
+              position: 'fixed',
+              top: 0, left: 0,
+              width: '100%', height: '100svh',
+              objectFit: 'cover',
+              zIndex: 0,
+            }}
+          />
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '100%', height: '100svh',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%)',
+            zIndex: 1,
+          }} />
+        </>
+      )}
+
+      {/* Распорка — толкает контент вниз */}
+      <div style={{ flex: 1 }} />
+
+      {/* Контент поверх фото */}
+      <div style={{ position: 'relative', zIndex: 10 }}>
+
+        {works.length > 0 && (
+          <section style={{ padding: '0 24px' }}>
+            <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 12 }}>
+              Последние работы
+            </p>
+            {works.map((work: any) => (
+              <Link
+                key={work._id}
+                href={`/works/${work.slug.current}`}
+                className="home-row"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '10px 0',
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  textDecoration: 'none',
+                  color: 'white',
+                }}
+              >
+                {work.image?.url && (
+                  <img
+                    src={urlFor(work.image).width(120).height(96).fit('crop').url()}
+                    alt=""
+                    style={{ width: 60, height: 48, objectFit: 'cover', flexShrink: 0 }}
+                  />
+                )}
+                <span style={{ flex: 1, fontSize: 15 }}>{work.title}</span>
+                <span style={{ fontSize: 13, color: 'white', flexShrink: 0 }}>
+                  {[(typeLabels[work.type] ?? work.type), work.year].filter(Boolean).join(' · ')}
+                </span>
+                <span style={{ color: 'white', flexShrink: 0 }}>→</span>
+              </Link>
+            ))}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+          </section>
         )}
 
-        {/* Контент */}
-        <div className="relative z-10 px-6 pb-10 pt-24">
-          <FadeIn>
-            <h1
-              className="font-sans text-[clamp(2.2rem,7vw,9rem)] leading-none font-bold uppercase"
-              style={{ color: hasPhoto ? 'white' : 'oklch(14% 0.008 60)' }}
-            >
-              {settings?.name ?? 'Имя'}
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <p
-              className="font-serif text-[clamp(1rem,2.5vw,1.6rem)] mt-3 italic"
-              style={{ color: hasPhoto ? 'rgba(255,255,255,0.75)' : 'oklch(40% 0 0)' }}
-            >
-              Звуковой художник и педагог
+        {posts.length > 0 && (
+          <section style={{ padding: '24px 24px 0' }}>
+            <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 12 }}>
+              Последние публикации
             </p>
-          </FadeIn>
-
-          {/* Соцсети */}
-          {settings?.socials?.length > 0 && (
-            <FadeIn delay={0.2}>
-              <div className="flex gap-5 mt-6">
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {settings.socials.map((s: any) => (
-                  <a
-                    key={s.url}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.label}
-                    className="transition-opacity duration-300 hover:opacity-60"
-                    style={{ color: hasPhoto ? 'white' : 'oklch(14% 0.008 60)' }}
-                  >
-                    <SocialIcon icon={s.icon} size={22} />
-                  </a>
-                ))}
-              </div>
-            </FadeIn>
-          )}
-        </div>
-      </section>
-
-      {/* Избранные работы */}
-      {works.length > 0 && (
-        <section className="px-6 py-24">
-          <FadeIn>
-            <h2 className="font-sans text-sm uppercase tracking-widest text-white/40 mb-12">
-              Избранные работы
-            </h2>
-          </FadeIn>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {works.map((work: any, i: number) => (
-              <FadeIn key={work._id} delay={i * 0.1}>
-                <WorkCard work={work} />
-              </FadeIn>
+            {posts.map((post: any) => (
+              <Link
+                key={post._id}
+                href={`/publications/${post.slug.current}`}
+                className="home-row"
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 14,
+                  padding: '10px 0',
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  textDecoration: 'none',
+                  color: 'white',
+                }}
+              >
+                <span style={{ flex: 1, fontSize: 15 }}>{post.title}</span>
+                <span style={{ fontSize: 13, color: 'white', flexShrink: 0 }}>
+                  {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('ru-RU') : ''}
+                </span>
+                <span style={{ color: 'white', flexShrink: 0 }}>→</span>
+              </Link>
             ))}
-          </div>
-        </section>
-      )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+          </section>
+        )}
+
+        <Footer name={settings?.name ?? ''} socials={settings?.socials ?? []} />
+      </div>
     </div>
   )
 }

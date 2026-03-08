@@ -1,16 +1,10 @@
 import type { Metadata } from 'next'
-import { Onest, Cormorant } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-const onest = Onest({
+const inter = Inter({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-onest',
-  display: 'swap',
-})
-
-const cormorant = Cormorant({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-cormorant',
+  variable: '--font-sans',
   display: 'swap',
 })
 
@@ -21,8 +15,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${onest.variable} ${cormorant.variable}`}>
-      <body className="bg-zinc-950 text-white">{children}</body>
+    <html lang="ru" className={inter.variable}>
+      <body>{children}</body>
     </html>
   )
 }

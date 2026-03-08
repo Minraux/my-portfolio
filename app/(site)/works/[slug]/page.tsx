@@ -1,11 +1,32 @@
 import { notFound } from 'next/navigation'
-import FadeIn from '@/components/FadeIn'
+import { PortableText } from '@portabletext/react'
 import { getWork, getAllWorks } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
 
 export async function generateStaticParams() {
   const works = await getAllWorks()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return works.map((w: any) => ({ slug: w.slug.current }))
+}
+
+const bodyComponents = {
+  types: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    image: ({ value }: any) => (
+      <img src={urlFor(value).width(1200).url()} alt="" style={{ width: '100%', margin: '24px 0' }} />
+    ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    embed: ({ value }: any) => (
+      <div dangerouslySetInnerHTML={{ __html: value.code }} style={{ margin: '24px 0' }} />
+    ),
+  },
+}
+
+const typeLabels: Record<string, string> = {
+  audio: 'Аудио',
+  video: 'Видео',
+  installation: 'Инсталляция',
+  performance: 'Перформанс',
 }
 
 export default async function WorkPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -14,44 +35,105 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
   if (!work) notFound()
 
   return (
-    <div className="px-6 py-24 max-w-4xl mx-auto">
-      <FadeIn>
-        <p className="font-sans text-sm uppercase tracking-widest text-white/40 mb-4">
-          {work.type} {work.year && `— ${work.year}`} {work.location && `— ${work.location}`}
-        </p>
-        <h1 className="font-sans text-[clamp(1.5rem,4vw,4rem)] font-bold uppercase mb-6">
-          {work.title}
-        </h1>
-      </FadeIn>
+    <div style={{ padding: '40px 24px' }}>
 
-      <FadeIn delay={0.1}>
-        {work.mediaType === 'embed' && work.embedCode && (
-          <div className="mb-8" dangerouslySetInnerHTML={{ __html: work.embedCode }} />
-        )}
-        {work.mediaType === 'link' && work.mediaUrl && (
-          <a href={work.mediaUrl} target="_blank" rel="noopener noreferrer"
-            className="inline-block font-sans text-sm border border-white/20 px-4 py-2 hover:border-white transition-colors duration-300 mb-8">
+      {/* Ссылка над заголовком */}
+      {work.mediaType === 'link' && work.mediaUrl && (
+        <div style={{ marginBottom: 16 }}>
+          <a
+            href={work.mediaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-pill"
+            style={{ display: 'inline-block' }}
+          >
             Открыть ↗
           </a>
-        )}
-        {work.mediaType === 'file' && work.mediaFile && (
-          <audio controls src={work.mediaFile} className="w-full mb-8" />
-        )}
-      </FadeIn>
-
-      {work.description && (
-        <FadeIn delay={0.15}>
-          <p className="font-serif text-xl text-white/80 italic mb-12">{work.description}</p>
-        </FadeIn>
+        </div>
       )}
 
-      {work.images?.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {work.images.map((img: any, i: number) => (
-            <FadeIn key={i} delay={i * 0.05}>
-              <img src={urlFor(img).width(1200).url()} alt="" className="w-full" />
-            </FadeIn>
-          ))}
+      {/* Заголовок */}
+      <h1 style={{
+        fontSize: 'clamp(1.5rem, 4vw, 3rem)',
+        fontWeight: 600,
+        lineHeight: 1.2,
+        marginBottom: 40,
+        borderBottom: '1px solid #1e1e1e',
+        paddingBottom: 24,
+      }}>
+        {work.title}
+      </h1>
+
+      {/* Двухколонная сетка */}
+      <div className="detail-grid">
+
+        {/* Левая колонка — всегда изображения */}
+        <div className="detail-grid-left" style={{ paddingRight: 32 }}>
+          {work.images?.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {work.images.map((img: any, i: number) => (
+                <img key={i} src={urlFor(img).width(900).url()} alt="" style={{ width: '100%' }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Правая колонка — метаданные */}
+        <div className="detail-grid-right" style={{ paddingLeft: 32, borderLeft: '1px solid #1e1e1e' }}>
+          {work.type && (
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 4 }}>Тип</p>
+              <p style={{ fontSize: 15 }}>{typeLabels[work.type] ?? work.type}</p>
+              <div style={{ borderTop: '1px solid #1e1e1e', marginTop: 20 }} />
+            </div>
+          )}
+          {work.year && (
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 4 }}>Год</p>
+              <p style={{ fontSize: 15 }}>{work.year}</p>
+              <div style={{ borderTop: '1px solid #1e1e1e', marginTop: 20 }} />
+            </div>
+          )}
+          {work.location && (
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'white', textTransform: 'uppercase', marginBottom: 4 }}>Место</p>
+              <p style={{ fontSize: 15 }}>{work.location}</p>
+              <div style={{ borderTop: '1px solid #1e1e1e', marginTop: 20 }} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Аудио-файл под сеткой */}
+      {work.mediaType === 'file' && work.mediaFile && (
+        <div style={{ marginBottom: 40, borderTop: '1px solid #1e1e1e', paddingTop: 40 }}>
+          <audio controls src={work.mediaFile} style={{ width: '100%' }} />
+        </div>
+      )}
+
+      {/* Body-текст с inline embed */}
+      {work.body && (
+        <div style={{
+          fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
+          lineHeight: 1.6,
+          borderTop: '1px solid #1e1e1e',
+          paddingTop: 40,
+        }}>
+          <PortableText value={work.body} components={bodyComponents} />
+        </div>
+      )}
+
+      {/* Описание (legacy) */}
+      {!work.body && work.description && (
+        <div style={{
+          fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
+          lineHeight: 1.6,
+          color: 'white',
+          borderTop: '1px solid #1e1e1e',
+          paddingTop: 40,
+        }}>
+          <p>{work.description}</p>
         </div>
       )}
     </div>

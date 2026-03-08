@@ -5,80 +5,67 @@ import { useState, useEffect } from 'react'
 
 const links = [
   { href: '/works', label: 'Работы' },
-  { href: '/about', label: 'О себе' },
-  { href: '/istochnik', label: 'Источник' },
-  { href: '/blog', label: 'Блог' },
-  { href: '/contact', label: 'Контакт' },
+  { href: '/publications', label: 'Публикации' },
+  { href: '/source', label: 'Источник' },
+  { href: '/about', label: 'Автор' },
 ]
 
-export default function Header({ name }: { name: string }) {
+export default function Header() {
   const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-  // Закрывать при переходе на другую страницу
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setIsOpen(false) }, [pathname])
-
-  // Блокировать скролл когда меню открыто
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [isOpen])
+    const onScroll = () => setScrolled(window.scrollY >= 50)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const isHome = pathname === '/'
+  const transparent = isHome && !scrolled
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 mix-blend-difference">
-        <Link href="/" className="font-sans text-sm uppercase tracking-widest text-white">
-          {name}
-        </Link>
-
-        {/* Десктоп навигация */}
-        <nav className="hidden lg:flex gap-6">
-          {links.map(link => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`font-sans text-sm uppercase tracking-widest transition-opacity duration-300 ${
-                pathname === link.href ? 'opacity-100' : 'opacity-50 hover:opacity-100'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Бургер кнопка (мобайл/планшет) */}
-        <button
-          onClick={() => setIsOpen(v => !v)}
-          aria-label={isOpen ? 'Закрыть меню' : 'Открыть меню'}
-          className="lg:hidden flex flex-col gap-1.5 p-1 text-white"
-        >
-          <span className={`block w-6 h-px bg-current transition-transform duration-300 origin-center ${isOpen ? 'translate-y-[5px] rotate-45' : ''}`} />
-          <span className={`block w-6 h-px bg-current transition-opacity duration-300 ${isOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-6 h-px bg-current transition-transform duration-300 origin-center ${isOpen ? '-translate-y-[5px] -rotate-45' : ''}`} />
-        </button>
-      </header>
-
-      {/* Мобильное меню оверлей */}
-      {isOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden flex flex-col justify-center items-center"
-          style={{ backgroundColor: 'var(--color-bg)' }}
-        >
-          <nav className="flex flex-col items-center gap-8">
-            {links.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`font-sans text-3xl uppercase tracking-widest transition-opacity duration-300 ${
-                  pathname === link.href ? 'opacity-100' : 'opacity-40 hover:opacity-100'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+    <header
+      style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        zIndex: 50,
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        flexWrap: 'nowrap',
+        whiteSpace: 'nowrap',
+        background: transparent ? 'transparent' : 'rgba(0,0,0,0.95)',
+        backdropFilter: transparent ? 'none' : 'blur(8px)',
+        transition: 'background 0.2s',
+      }}
+    >
+      {pathname !== '/' && (
+        <Link href="/" aria-label="Назад" className="nav-back">‹</Link>
       )}
-    </>
+
+      {links.filter(link => pathname !== link.href).map(link => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className="nav-pill"
+        >
+          {link.label}
+        </Link>
+      ))}
+
+      {pathname !== '/contact' && (
+        <Link
+          href="/contact"
+          className="nav-pill nav-pill-cta"
+          style={{ marginLeft: 'auto' }}
+        >
+          Контакт
+        </Link>
+      )}
+    </header>
   )
 }
