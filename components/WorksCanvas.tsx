@@ -35,15 +35,15 @@ function seededRandom(seed: number) {
 function calcPositions(works: Work[], W: number, H: number) {
   const placed: { top: number; left: number; w: number; h: number }[] = []
   return works.map((work, i) => {
-    if (work.canvasTop && work.canvasLeft) {
-      return {
-        top: (parseFloat(work.canvasTop) / 100) * H,
-        left: (parseFloat(work.canvasLeft) / 100) * W,
-      }
-    }
-
     const pillW = Math.min(work.title.length * 9 + 48, 420)
     const pillH = 38
+
+    if (work.canvasTop && work.canvasLeft) {
+      return {
+        top: Math.max(8, Math.min((parseFloat(work.canvasTop) / 100) * H, H - pillH - 8)),
+        left: Math.max(8, Math.min((parseFloat(work.canvasLeft) / 100) * W, W - pillW - 8)),
+      }
+    }
     const years = works.map(w => w.year || 2000)
     const yMin = Math.min(...years)
     const yMax = Math.max(...years)
