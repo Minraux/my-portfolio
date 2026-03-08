@@ -1,19 +1,19 @@
 import { client } from './client'
 
 export async function getFeaturedWorks() {
-  return client.fetch(`*[_type == "work" && featured == true] | order(year desc) [0..2] {
+  return client.fetch(`*[_type == "work" && featured == true && hidden != true] | order(year desc) [0..2] {
     _id, title, slug, type, year, "image": images[0] { ..., "url": asset->url }
   }`)
 }
 
 export async function getLatestPosts() {
-  return client.fetch(`*[_type == "post"] | order(publishedAt desc) [0..2] {
+  return client.fetch(`*[_type == "post" && hidden != true] | order(publishedAt desc) [0..2] {
     _id, title, slug, publishedAt, "excerpt": pt::text(body)[0..150]
   }`)
 }
 
 export async function getAllWorks() {
-  return client.fetch(`*[_type == "work"] | order(year desc) {
+  return client.fetch(`*[_type == "work" && hidden != true] | order(year desc) {
     _id, title, slug, type, year, canvasTop, canvasLeft,
     "image": images[0] { ..., "url": asset->url }
   }`)
@@ -29,7 +29,7 @@ export async function getWork(slug: string) {
 }
 
 export async function getAllPosts() {
-  return client.fetch(`*[_type == "post"] | order(publishedAt desc) {
+  return client.fetch(`*[_type == "post" && hidden != true] | order(publishedAt desc) {
     _id, title, slug, publishedAt, tags, excerpt,
     "coverImage": coverImage { ..., "url": asset->url }
   }`)

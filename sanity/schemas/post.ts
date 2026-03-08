@@ -18,6 +18,7 @@ export const post = defineType({
         { type: 'object', name: 'embed', title: 'Встраиваемый блок', fields: [{ name: 'code', type: 'text', title: 'Код для вставки' }] },
       ],
     }),
+    defineField({ name: 'hidden', title: 'Скрыть с сайта', type: 'boolean', initialValue: false }),
     defineField({ name: 'tags', title: 'Теги', type: 'array', of: [{ type: 'string' }] }),
     defineField({ name: 'excerpt', title: 'Лид (до 150 символов)', type: 'text', rows: 2 }),
     defineField({ name: 'coverImage', title: 'Обложка', type: 'image', options: { hotspot: true } }),

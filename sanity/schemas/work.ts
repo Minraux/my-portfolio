@@ -51,6 +51,7 @@ export const work = defineType({
     defineField({ name: 'location', title: 'Место', type: 'string' }),
     defineField({ name: 'images', title: 'Изображения', type: 'array', of: [{ type: 'image', options: { hotspot: true } }] }),
     defineField({ name: 'featured', title: 'Показать на главной', type: 'boolean', initialValue: false }),
+    defineField({ name: 'hidden', title: 'Скрыть с сайта', type: 'boolean', initialValue: false }),
     defineField({ name: 'canvasTop', title: 'Позиция на холсте (сверху, %)', type: 'string' }),
     defineField({ name: 'canvasLeft', title: 'Позиция на холсте (слева, %)', type: 'string' }),
     defineField({
