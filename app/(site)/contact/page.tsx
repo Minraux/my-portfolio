@@ -1,4 +1,7 @@
+import type { Metadata } from 'next'
 import { getSettings } from '@/sanity/lib/queries'
+
+export const metadata: Metadata = { title: 'Контакт' }
 
 export default async function ContactPage() {
   const settings = await getSettings()

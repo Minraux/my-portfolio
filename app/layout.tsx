@@ -1,21 +1,30 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Onest, Cormorant } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({
+const onest = Onest({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-sans',
+  variable: '--font-onest',
+  display: 'swap',
+})
+
+const cormorant = Cormorant({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-cormorant',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Portfolio',
+  title: {
+    default: 'Влад Добровольский',
+    template: '%s — Влад Добровольский',
+  },
   description: 'Звуковой художник и педагог',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={inter.variable}>
+    <html lang="ru" className={`${onest.variable} ${cormorant.variable}`}>
       <body>{children}</body>
     </html>
   )

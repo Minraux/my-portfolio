@@ -1,4 +1,7 @@
+import type { Metadata } from 'next'
 import { PortableText } from '@portabletext/react'
+
+export const metadata: Metadata = { title: 'Автор' }
 import { getAbout } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
 
