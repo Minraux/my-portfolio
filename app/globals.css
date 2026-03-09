@@ -67,7 +67,7 @@ header::-webkit-scrollbar { display: none; }
 
 /* Works page canvas/list toggle */
 .works-canvas-wrap { display: none; }
-.works-list        { display: block; }
+.works-list        { display: flex; flex-direction: column; min-height: calc(100svh - 3rem); }
 @media (min-width: 768px) {
   .works-canvas-wrap { display: block; }
   .works-list        { display: none; }

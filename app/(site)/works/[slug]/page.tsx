@@ -22,6 +22,14 @@ const bodyComponents = {
       <div dangerouslySetInnerHTML={{ __html: value.code }} style={{ margin: '24px 0' }} />
     ),
   },
+  marks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    link: ({ value, children }: any) => (
+      <a href={value?.href} target="_blank" rel="noopener noreferrer" className="text-link" style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+        {children}
+      </a>
+    ),
+  },
 }
 
 const typeLabels: Record<string, string> = {
@@ -111,6 +119,14 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
         <div style={{ marginBottom: 40, borderTop: '1px solid #1e1e1e', paddingTop: 40 }}>
           <audio controls src={work.mediaFile} style={{ width: '100%' }} />
         </div>
+      )}
+
+      {/* Встраиваемый код под сеткой */}
+      {work.mediaType === 'embed' && work.embedCode && (
+        <div
+          dangerouslySetInnerHTML={{ __html: work.embedCode }}
+          style={{ marginBottom: 40, borderTop: '1px solid #1e1e1e', paddingTop: 40 }}
+        />
       )}
 
       {/* Body-текст с inline embed */}

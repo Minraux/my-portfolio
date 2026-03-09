@@ -188,7 +188,7 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
       </div>
 
       {/* ── Мобайл: список с пагинацией ── */}
-      <div className="works-list" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100svh - 3rem)' }}>
+      <div className="works-list">
         <div style={{ flex: 1, padding: '16px 24px' }}>
         {paginated.map((work: Work) => (
           <Link

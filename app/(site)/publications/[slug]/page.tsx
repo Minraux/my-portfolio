@@ -22,6 +22,14 @@ const bodyComponents = {
       <div dangerouslySetInnerHTML={{ __html: value.code }} style={{ margin: '24px 0' }} />
     ),
   },
+  marks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    link: ({ value, children }: any) => (
+      <a href={value?.href} target="_blank" rel="noopener noreferrer" className="text-link" style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+        {children}
+      </a>
+    ),
+  },
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
