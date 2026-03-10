@@ -206,13 +206,11 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
             }}
           >
             {work.image?.url && (
-              <div className="img-thumb" style={{ width: 60, height: 48 }}>
-                <img
-                  src={urlFor(work.image).width(120).height(96).fit('crop').url()}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
+              <img
+                src={urlFor(work.image).width(120).height(96).fit('crop').url()}
+                alt=""
+                style={{ width: 60, height: 48, objectFit: 'cover', flexShrink: 0 }}
+              />
             )}
             <span style={{ flex: 1, fontSize: 15 }}>{work.title}</span>
             <span style={{ fontSize: 13, color: 'white' }}>

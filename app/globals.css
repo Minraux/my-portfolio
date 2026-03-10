@@ -139,9 +139,3 @@ a.text-link:hover {
 .article-body p { margin-bottom: 1.2em; }
 .article-body p:last-child { margin-bottom: 0; }
 
-/* Image thumb wrapper */
-.img-thumb {
-  position: relative;
-  flex-shrink: 0;
-  overflow: hidden;
-}
