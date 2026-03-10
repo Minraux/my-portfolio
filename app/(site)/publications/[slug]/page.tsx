@@ -1,5 +1,6 @@
 export const revalidate = 300
 
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PortableText } from '@portabletext/react'
 import { getPost, getAllPosts } from '@/sanity/lib/queries'
@@ -9,6 +10,21 @@ export async function generateStaticParams() {
   const posts = await getAllPosts()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return posts.map((p: any) => ({ slug: p.slug.current }))
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPost(slug)
+  if (!post) return {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ogImage = (post as any).seo?.ogImage?.url ?? (post as any).coverImage?.url
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    title: (post as any).seo?.title ?? post.title,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    description: (post as any).seo?.description,
+    openGraph: ogImage ? { images: [{ url: ogImage }] } : undefined,
+  }
 }
 
 const bodyComponents = {

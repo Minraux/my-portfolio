@@ -24,7 +24,8 @@ export async function getWork(slug: string) {
     _id, title, slug, type, description, year, location,
     mediaType, mediaUrl, embedCode, "mediaFile": mediaFile.asset->url,
     images[] { ..., "url": asset->url },
-    body[] { ..., _type == "image" => { ..., "url": asset->url } }
+    body[] { ..., _type == "image" => { ..., "url": asset->url } },
+    seo { title, description, "ogImage": ogImage { ..., "url": asset->url } }
   }`, { slug })
 }
 
@@ -42,7 +43,8 @@ export async function getPost(slug: string) {
     body[] {
       ...,
       _type == "image" => { ..., "url": asset->url }
-    }
+    },
+    seo { title, description, "ogImage": ogImage { ..., "url": asset->url } }
   }`, { slug })
 }
 
