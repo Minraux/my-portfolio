@@ -195,11 +195,13 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
             }}
           >
             {post.coverImage?.url && (
-              <img
-                src={urlFor(post.coverImage).width(120).height(96).fit('crop').url()}
-                alt=""
-                style={{ width: 60, height: 48, objectFit: 'cover', flexShrink: 0 }}
-              />
+              <div className="img-thumb" style={{ width: 60, height: 48 }}>
+                <img
+                  src={urlFor(post.coverImage).width(120).height(96).fit('crop').url()}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
             )}
             <span style={{ flex: 1, fontSize: 15 }}>{post.title}</span>
             <span style={{ fontSize: 13, color: 'white' }}>
