@@ -139,27 +139,9 @@ a.text-link:hover {
 .article-body p { margin-bottom: 1.2em; }
 .article-body p:last-child { margin-bottom: 0; }
 
-/* Image hover effect in list rows */
+/* Image thumb wrapper */
 .img-thumb {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-}
-.img-thumb img {
-  display: block;
-  transition: filter 0.2s;
-}
-.img-thumb::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 255, 65, 0);
-  transition: background 0.2s;
-  pointer-events: none;
-}
-.home-row:hover .img-thumb img {
-  filter: grayscale(100%);
-}
-.home-row:hover .img-thumb::after {
-  background: rgba(0, 255, 65, 0.2);
 }

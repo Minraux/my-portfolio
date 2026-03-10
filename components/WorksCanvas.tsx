@@ -159,9 +159,8 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
                   <img
                     src={urlFor(work.image).width(400).height(300).fit('crop').url()}
                     alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%)' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,255,65,0.2)' }} />
                 </div>
               )}
               <Link
