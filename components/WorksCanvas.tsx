@@ -40,7 +40,7 @@ function calcPositions(works: Work[], W: number, H: number) {
 
     if (work.canvasTop && work.canvasLeft) {
       return {
-        top: Math.max(8, Math.min((parseFloat(work.canvasTop) / 100) * H, H - pillH - 8)),
+        top: Math.max(24, Math.min((parseFloat(work.canvasTop) / 100) * H, H - pillH - 68)),
         left: Math.max(8, Math.min((parseFloat(work.canvasLeft) / 100) * W, W - pillW - 8)),
       }
     }
@@ -66,7 +66,7 @@ function calcPositions(works: Work[], W: number, H: number) {
       }
     }
 
-    top = Math.max(20, Math.min(top, H - pillH - 24))
+    top = Math.max(24, Math.min(top, H - pillH - 68))
     left = Math.max(24, Math.min(left, W - pillW - 24))
     placed.push({ top, left, w: pillW, h: pillH })
     return { top, left }
@@ -84,7 +84,7 @@ export default function WorksCanvas({ works, settings }: { works: Work[], settin
   // Сброс старого кеша без размеров в ключе
   useEffect(() => {
     try {
-      Object.keys(localStorage).filter(k => k.startsWith('canvas-') && !k.match(/-\d+$/)).forEach(k => localStorage.removeItem(k))
+      Object.keys(localStorage).filter(k => k.startsWith('canvas-')).forEach(k => localStorage.removeItem(k))
     } catch { /* ignore */ }
   }, [])
 

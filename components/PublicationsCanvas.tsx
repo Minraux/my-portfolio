@@ -33,7 +33,7 @@ function calcPositions(posts: Post[], W: number, H: number) {
 
     if (post.canvasTop && post.canvasLeft) {
       return {
-        top: Math.max(8, Math.min((parseFloat(post.canvasTop) / 100) * H, H - pillH - 8)),
+        top: Math.max(24, Math.min((parseFloat(post.canvasTop) / 100) * H, H - pillH - 68)),
         left: Math.max(8, Math.min((parseFloat(post.canvasLeft) / 100) * W, W - pillW - 8)),
       }
     }
@@ -61,7 +61,7 @@ function calcPositions(posts: Post[], W: number, H: number) {
       }
     }
 
-    top = Math.max(20, Math.min(top, H - pillH - 24))
+    top = Math.max(24, Math.min(top, H - pillH - 68))
     left = Math.max(24, Math.min(left, W - pillW - 24))
     placed.push({ top, left, w: pillW, h: pillH })
     return { top, left }
@@ -78,7 +78,7 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
 
   useEffect(() => {
     try {
-      Object.keys(localStorage).filter(k => k.startsWith('pub-canvas-') && !k.match(/-\d+$/)).forEach(k => localStorage.removeItem(k))
+      Object.keys(localStorage).filter(k => k.startsWith('pub-canvas-')).forEach(k => localStorage.removeItem(k))
     } catch { /* ignore */ }
   }, [])
 
