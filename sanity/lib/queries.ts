@@ -7,7 +7,7 @@ export async function getFeaturedWorks() {
 }
 
 export async function getLatestPosts() {
-  return client.fetch(`*[_type == "post" && hidden != true] | order(publishedAt desc) [0..2] {
+  return client.fetch(`*[_type == "post" && featured == true && hidden != true] | order(publishedAt desc) [0..2] {
     _id, title, slug, publishedAt, "excerpt": pt::text(body)[0..150]
   }`)
 }

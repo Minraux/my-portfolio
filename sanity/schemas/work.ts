@@ -7,7 +7,6 @@ export const work = defineType({
   fields: [
     defineField({ name: 'title', title: 'Название', type: 'string', validation: r => r.required() }),
     defineField({ name: 'slug', title: 'Слаг (URL)', type: 'slug', options: { source: 'title' }, validation: r => r.required() }),
-    defineField({ name: 'description', title: 'Описание', type: 'text' }),
     defineField({
       name: 'type',
       title: 'Тип',
@@ -22,6 +21,9 @@ export const work = defineType({
       },
       validation: r => r.required(),
     }),
+    defineField({ name: 'year', title: 'Год', type: 'number' }),
+    defineField({ name: 'location', title: 'Место', type: 'string' }),
+    defineField({ name: 'images', title: 'Изображения', type: 'array', of: [{ type: 'image', options: { hotspot: true } }] }),
     defineField({
       name: 'mediaType',
       title: 'Тип медиа',
@@ -47,9 +49,7 @@ export const work = defineType({
         { type: 'object', name: 'embed', title: 'Встраиваемый блок', fields: [{ name: 'code', type: 'text', title: 'Код для вставки' }] },
       ],
     }),
-    defineField({ name: 'year', title: 'Год', type: 'number' }),
-    defineField({ name: 'location', title: 'Место', type: 'string' }),
-    defineField({ name: 'images', title: 'Изображения', type: 'array', of: [{ type: 'image', options: { hotspot: true } }] }),
+    defineField({ name: 'description', title: 'Описание', type: 'text' }),
     defineField({ name: 'featured', title: 'Показать на главной', type: 'boolean', initialValue: false }),
     defineField({ name: 'hidden', title: 'Скрыть с сайта', type: 'boolean', initialValue: false }),
     defineField({ name: 'canvasTop', title: 'Позиция на холсте (сверху, %)', type: 'string' }),
