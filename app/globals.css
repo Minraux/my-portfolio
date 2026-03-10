@@ -27,11 +27,6 @@ a.nav-pill:hover {
   border-color: #00FF41;
   color: #00FF41;
 }
-a.nav-pill-cta:hover {
-  border-color: #ffffff;
-  color: #ffffff;
-}
-
 a.nav-back {
   display: flex;
   align-items: center;
