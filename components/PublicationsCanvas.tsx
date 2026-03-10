@@ -148,8 +148,9 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
                     <img
                       src={urlFor(post.coverImage).width(400).height(300).fit('crop').url()}
                       alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%)' }}
                     />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,255,65,0.2)' }} />
                   </div>
                 )}
                 <Link
