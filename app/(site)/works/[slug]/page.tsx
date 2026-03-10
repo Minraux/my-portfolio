@@ -131,7 +131,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
 
       {/* Body-текст с inline embed */}
       {work.body && (
-        <div style={{
+        <div className="article-body" style={{
           fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
           lineHeight: 1.6,
           borderTop: '1px solid #1e1e1e',

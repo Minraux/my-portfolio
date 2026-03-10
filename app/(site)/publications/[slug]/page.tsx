@@ -117,7 +117,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
       {/* Body-текст на всю ширину */}
       {post.body && (
-        <div style={{
+        <div className="article-body" style={{
           fontSize: 'clamp(1.1rem, 2vw, 1.4rem)',
           lineHeight: 1.6,
           color: 'white',

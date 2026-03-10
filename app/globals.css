@@ -140,3 +140,6 @@ a.text-link:hover {
     gap: 32px;
   }
 }
+
+.article-body p { margin-bottom: 1.2em; }
+.article-body p:last-child { margin-bottom: 0; }
