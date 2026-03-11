@@ -20,7 +20,7 @@ export default async function HomePage() {
   ])
 
   const heroEnabled = settings?.heroEnabled !== false && !!settings?.heroImage?.url
-  const photoUrl = heroEnabled ? urlFor(settings.heroImage).width(1600).url() : null
+  const photoUrl = heroEnabled ? urlFor(settings.heroImage).width(1600).auto('format').url() : null
 
   return (
     <div style={{
