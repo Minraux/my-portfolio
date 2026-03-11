@@ -2,10 +2,19 @@ export const revalidate = 300
 
 import type { Metadata } from 'next'
 import { PortableText } from '@portabletext/react'
-
-export const metadata: Metadata = { title: 'Автор' }
 import { getAbout } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const about = await getAbout()
+  const ogImage = about?.photo?.url
+  return {
+    title: 'Автор',
+    openGraph: {
+      ...(ogImage && { images: [{ url: urlFor(about.photo).width(560).auto('format').url() }] }),
+    },
+  }
+}
 
 export default async function AboutPage() {
   const about = await getAbout()

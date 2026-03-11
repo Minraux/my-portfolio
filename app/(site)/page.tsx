@@ -1,9 +1,20 @@
 export const revalidate = 300
 
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import { getFeaturedWorks, getLatestPosts, getSettings } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings()
+  const ogImage = settings?.heroImage?.url
+  return {
+    openGraph: {
+      ...(ogImage && { images: [{ url: urlFor(settings.heroImage).width(1600).auto('format').url() }] }),
+    },
+  }
+}
 
 const typeLabels: Record<string, string> = {
   audio: 'Аудио',
