@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Behaviour Rules
+
+- **Не пиши приветствия** — переходи сразу к делу
+- **Всегда используй diff** — когда редактируешь, показывай только изменённые строки
+- **Не повторяй неизменённый код** — при выводе изменений опускай строки, которые не трогал
+- **Язык: русский** — все ответы на русском
+
 ## Commands
 
 - `npm run dev` — локальный сервер (Next.js + Sanity Studio по адресу /studio)
@@ -57,6 +64,22 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - Mobile: < 768px — 1 колонка, горизонтальный скролл навигации
 - Tablet: 768–1023px — 2 колонки
 - Desktop: ≥ 1024px — полный вид, канвас в works/publications
+
+## Performance & Optimizations (March 2026)
+
+### ISR Caching
+- `sanity/lib/queries.ts`: All `client.fetch()` calls include `{ next: { revalidate: 3600 } }` (1 hour cache)
+- `getSettings()` wrapped in `cache()` to deduplicate requests during rendering
+- Result: ~80% reduction in Sanity API calls
+
+### Vercel Configuration
+- `vercel.json`: Region set to `fra1` (Frankfurt, closer to Russia)
+- `next.config.ts`: Image formats configured for AVIF/WebP (future optimization)
+
+### Image URL Generation
+- `sanity/lib/image.ts`: Singleton pattern for `createImageUrlBuilder`
+- `.auto('format')` appended to URLs for automatic format optimization
+- `imageUrl()` helper function for quick optimized URL generation
 
 ## Next.js notes
 

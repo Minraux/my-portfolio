@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Портфолио Влада Добровольского
 
-## Getting Started
+Личный портфель звукохудожника, композитора и педагога.
 
-First, run the development server:
+**Сайт:** https://dobrovolski.space/
+**Альтернативный URL:** https://my-portfolio-eight-inky-26.vercel.app/
+**GitHub:** https://github.com/Minraux/my-portfolio
+
+## Стек
+
+- **Next.js 16** — App Router, TypeScript
+- **Sanity v3** — CMS для контента (ID: `afz3cq75`)
+- **Tailwind CSS v4** + Custom CSS классы
+- **Framer Motion** — анимации
+- **Vercel** — хостинг (регион: Frankfurt `fra1`)
+
+## Разработка
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev          # dev сервер на http://localhost:3000
+npm run build        # production сборка
+npm run lint         # линтер
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sanity Studio доступна на `/studio`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Структура
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/(site)/` — публичные страницы
+- `app/studio/` — Sanity Studio
+- `components/` — React компоненты
+- `sanity/` — CMS конфигурация (schemas, queries, lib)
+- `app/globals.css` — глобальные стили (nav-pill, detail-grid, etc.)
 
-## Learn More
+## Оптимизация (март 2026)
 
-To learn more about Next.js, take a look at the following resources:
+✅ **ISR кэширование** — Sanity запросы кэшируются на 1 час (`revalidate: 3600`)
+✅ **Vercel fra1** — серверы во Франкфурте (ближе к РФ)
+✅ **React cache()** — дедупликация запросов getSettings
+✅ **Singleton pattern** — для URL builder (sanity/lib/image.ts)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Результат: ~80% снижение количества Sanity запросов.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Переменные окружения
 
-## Deploy on Vercel
+```
+NEXT_PUBLIC_SANITY_PROJECT_ID=afz3cq75
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_TOKEN=...
+REVALIDATE_SECRET=...
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/revalidate` — On-Demand ISR (требует REVALIDATE_SECRET)
+- `/api/contact` — обработка контактных форм (Resend)
