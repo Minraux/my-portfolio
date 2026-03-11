@@ -41,6 +41,7 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - `SocialIcon` — SVG иконки: telegram, instagram, youtube
 - `ContactForm` — форма (client component, не используется на /contact)
 - `WorksCanvas` / `PublicationsCanvas` — интерактивный канвас (desktop ≥768px): pill-элементы с позиционированием из Sanity (canvasTop/canvasLeft, %), превью-картинка по ховеру (направление зависит от позиции)
+  - ✅ **Важно:** контейнер имеет `overflow: hidden` — пилюли не создают скроллбар
 - `FadeIn` / `PageTransition` — Framer Motion анимации
 
 ## Environment Variables
@@ -64,6 +65,13 @@ Next.js 16 App Router. Публичный сайт в `app/(site)/`, Sanity Stud
 - Mobile: < 768px — 1 колонка, горизонтальный скролл навигации
 - Tablet: 768–1023px — 2 колонки
 - Desktop: ≥ 1024px — полный вид, канвас в works/publications
+
+## Recent UI Fixes (Mar 11 2026)
+
+- **Canvas overflow** — добавлен `overflow: hidden` на `WorksCanvas` и `PublicationsCanvas` контейнеры (`.works-canvas-wrap` / в PublicationsCanvas.tsx) чтобы пилюли не создавали горизонтальный скроллбар
+- **About page links** — `.about-bio a` теперь белые по умолчанию, зелёные только по hover (было наоборот, нужно было совпадать с другими ссылками на сайте)
+- **OG metadata** — добавлены `openGraph.title` (без суффикса «— Влад Добровольский»), `openGraph.description`, `openGraph.images` в `layout.tsx` (дефолт) и page components (works/[slug], publications/[slug])
+- **Favicons** — добавлены в `public/`: favicon.ico, favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png, android-chrome-192x192.png, android-chrome-512x512.png, site.webmanifest. Метаданные в `layout.tsx` metadata object
 
 ## Performance & Optimizations (March 2026)
 
