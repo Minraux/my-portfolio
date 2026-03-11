@@ -119,8 +119,8 @@ a.text-link:hover {
 }
 
 .about-bio p { margin-bottom: 1.2em; }
-.about-bio a { color: #00FF41; text-underline-offset: 3px; }
-.about-bio a:hover { opacity: 0.75; }
+.about-bio a { color: #ffffff; text-underline-offset: 3px; transition: color 0.1s; }
+.about-bio a:hover { color: #00FF41; }
 
 
 .about-grid {

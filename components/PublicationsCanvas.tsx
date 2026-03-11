@@ -125,7 +125,7 @@ export default function PublicationsCanvas({ posts, settings }: { posts: Post[];
       {/* ── Десктоп: canvas ── */}
       <div className="works-canvas-wrap">
         <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100svh - 3rem)' }}>
-          <div ref={containerRef} style={{ position: 'relative', flex: 1 }}>
+          <div ref={containerRef} style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
             {positions.length === posts.length && posts.map((post, i) => (
               <div
                 key={post._id}

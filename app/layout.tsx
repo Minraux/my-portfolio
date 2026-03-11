@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     template: '%s — Влад Добровольский',
   },
   description: 'Звуковой художник и педагог',
+  openGraph: {
+    title: 'Влад Добровольский',
+    description: 'Звуковой художник и педагог',
+    siteName: 'Влад Добровольский',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

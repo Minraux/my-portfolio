@@ -18,12 +18,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!work) return {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ogImage = (work as any).seo?.ogImage?.url ?? work.images?.[0]?.url
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seo = (work as any).seo
+  const ogTitle = seo?.title ?? work.title
+  const ogDescription = seo?.description
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    title: (work as any).seo?.title ?? work.title,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    description: (work as any).seo?.description,
-    openGraph: ogImage ? { images: [{ url: ogImage }] } : undefined,
+    title: ogTitle,
+    description: ogDescription,
+    openGraph: {
+      title: ogTitle,
+      ...(ogDescription && { description: ogDescription }),
+      ...(ogImage && { images: [{ url: ogImage }] }),
+    },
   }
 }
 
