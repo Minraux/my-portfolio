@@ -1,0 +1,90 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="100%" style="stop-color:#0d0d0d"/>
+    </linearGradient>
+    <linearGradient id="device" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D6D1C6"/>
+      <stop offset="100%" style="stop-color:#BFBAB0"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <rect x="60" y="100" width="1080" height="430" rx="10" fill="url(#device)"/>
+  
+  <text x="90" y="150" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" font-weight="300" letter-spacing="8" fill="#1e1e1e" text-transform="uppercase">Andromatic</text>
+  <text x="90" y="172" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" letter-spacing="3" fill="#999" text-transform="uppercase">Ten Step Pattern Sequencer · 1968</text>
+  
+  <rect x="90" y="195" width="1020" height="100" fill="#080c08" rx="4"/>
+  <path d="M 120 245 L 200 230 L 280 250 L 360 220 L 440 245 L 520 235 L 600 255 L 680 225 L 760 245 L 840 240 L 920 250 L 1000 235 L 1080 245" stroke="#2eee66" stroke-width="2" fill="none" opacity="0.8"/>
+  <path d="M 90 220 L 1110 220" stroke="rgba(40,70,40,0.4)" stroke-width="1"/>
+  <path d="M 90 270 L 1110 270" stroke="rgba(40,70,40,0.4)" stroke-width="1"/>
+  
+  <text x="100" y="212" font-family="Helvetica Neue, sans-serif" font-size="7" letter-spacing="2" fill="rgba(46,160,80,0.5)" text-transform="uppercase">Oscilloscope</text>
+  
+  <rect x="90" y="315" width="1020" height="180" fill="rgba(0,0,0,0.05)" rx="4"/>
+  
+  <g>
+    <rect x="110" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="150" cy="355" r="3" fill="#E8520A"/>
+    <rect x="110" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="200" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="240" cy="355" r="3" fill="#E8520A"/>
+    <rect x="200" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="290" y="340" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="290" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="380" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="420" cy="355" r="3" fill="#E8520A"/>
+    <rect x="380" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="470" y="340" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="470" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="560" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="600" cy="355" r="3" fill="#E8520A"/>
+    <rect x="560" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="650" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="690" cy="355" r="3" fill="#E8520A"/>
+    <rect x="650" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="740" y="340" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="740" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="830" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="870" cy="355" r="3" fill="#E8520A"/>
+    <rect x="830" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="920" y="340" width="80" height="30" rx="3" fill="#3c3c3c"/>
+    <circle cx="960" cy="355" r="3" fill="#E8520A"/>
+    <rect x="920" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="1010" y="340" width="80" height="30" rx="3" fill="#b3aea3"/>
+    <rect x="1010" y="375" width="80" height="30" rx="3" fill="#b3aea3"/>
+  </g>
+  
+  <circle cx="200" cy="560" r="25" fill="linear-gradient(145deg, #3a3a3a, #1e1e1e)"/>
+  <line x1="200" y1="560" x2="200" y2="540" stroke="#E8520A" stroke-width="3" stroke-linecap="round"/>
+  <text x="200" y="595" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#7a7a7a" text-anchor="middle" text-transform="uppercase">TEMPO</text>
+  <text x="200" y="607" font-family="monospace" font-size="8" fill="#555" text-anchor="middle">92 BPM</text>
+  
+  <circle cx="300" cy="560" r="25" fill="linear-gradient(145deg, #3a3a3a, #1e1e1e)"/>
+  <line x1="300" y1="560" x2="315" y2="550" stroke="#E8520A" stroke-width="3" stroke-linecap="round"/>
+  <text x="300" y="595" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#7a7a7a" text-anchor="middle" text-transform="uppercase">ATTACK</text>
+  
+  <circle cx="400" cy="560" r="25" fill="linear-gradient(145deg, #3a3a3a, #1e1e1e)"/>
+  <line x1="400" y1="560" x2="410" y2="545" stroke="#E8520A" stroke-width="3" stroke-linecap="round"/>
+  <text x="400" y="595" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#7a7a7a" text-anchor="middle" text-transform="uppercase">DECAY</text>
+  
+  <circle cx="500" cy="560" r="25" fill="linear-gradient(145deg, #3a3a3a, #1e1e1e)"/>
+  <line x1="500" y1="560" x2="485" y2="545" stroke="#E8520A" stroke-width="3" stroke-linecap="round"/>
+  <text x="500" y="595" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#7a7a7a" text-anchor="middle" text-transform="uppercase">FILTER</text>
+  
+  <circle cx="600" cy="560" r="25" fill="linear-gradient(145deg, #3a3a3a, #1e1e1e)"/>
+  <line x1="600" y1="560" x2="590" y2="550" stroke="#E8520A" stroke-width="3" stroke-linecap="round"/>
+  <text x="600" y="595" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#7a7a7a" text-anchor="middle" text-transform="uppercase">VOLUME</text>
+  
+  <circle cx="780" cy="560" r="30" fill="linear-gradient(145deg, #2e2e2e, #1a1a1a)"/>
+  <polygon points="780,540 795,555 780,555" fill="#E8520A"/>
+  <text x="780" y="605" font-family="Helvetica Neue, sans-serif" font-size="8" letter-spacing="2" fill="#888" text-anchor="middle" text-transform="uppercase">START</text>
+  
+  <rect x="880" y="540" width="70" height="18" rx="2" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+  <text x="915" y="553" font-family="Helvetica Neue, sans-serif" font-size="7" letter-spacing="2" fill="#E8BA6A" text-anchor="middle" text-transform="uppercase">SAW</text>
+  
+  <text x="600" y="625" font-family="Helvetica Neue, sans-serif" font-size="7" letter-spacing="3" fill="#b0b0b0" text-anchor="middle" text-transform="uppercase">E. KURENNIEMI · 1968</text>
+</svg>
