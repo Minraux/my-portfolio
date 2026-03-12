@@ -290,11 +290,15 @@ function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRe
   );
 }
 
-// 5 octaves
+// 5+ octaves: C2 to C7 (61 notes)
 const SCALE = [
-  110, 116.54, 123.47, 130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185, 196, 207.65, 220, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392, 415.3, 440, 466.16, 493.88, 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880, 932.33, 987.77, 1046.5, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760, 1864.66
+  65.41, 69.30, 73.42, 77.78, 82.41, 87.31, 92.50, 98.00, 103.83, 110, 116.54, 123.47,
+  130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185, 196, 207.65, 220, 233.08, 246.94,
+  261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392, 415.3, 440, 466.16, 493.88,
+  523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880, 932.33, 987.77,
+  1046.5, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760, 1864.66, 1975.53, 2093
 ];
-const NOTE_NAMES = ["A2","A#2","B2","C3","C#3","D3","D#3","E3","F3","F#3","G3","G#3","A3","A#3","B3","C4","C#4","D4","D#4","E4","F4","F#4","G4","G#4","A4","A#4","B4","C5","C#5","D5","D#5","E5","F5","F#5","G5","G#5","A5","A#5","B5","C6","C#6","D6","D#6","E6","F6","F#6","G6","G#6","A6","A#6","B6","C7"];
+const NOTE_NAMES = ["C2","C#2","D2","D#2","E2","F2","F#2","G2","G#2","A2","A#2","B2","C3","C#3","D3","D#3","E3","F3","F#3","G3","G#3","A3","A#3","B3","C4","C#4","D4","D#4","E4","F4","F#4","G4","G#4","A4","A#4","B4","C5","C#5","D5","D#5","E5","F5","F#5","G5","G#5","A5","A#5","B5","C6","C#6","D6","D#6","E6","F6","F#6","G6","G#6","A6","A#6","B6","C7"];
 const WAVEFORMS: OscillatorType[] = ["sine", "triangle", "sawtooth", "square"];
 
 interface Step { active: boolean; noteIdx: number; }
@@ -310,7 +314,11 @@ export default function AndromaticClient() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [steps, setSteps] = useState<Step[]>(
-    Array(10).fill(null).map((_, i) => ({ active: [0,2,3,5,7,8].includes(i), noteIdx: i * 5 }))
+    // Default pattern: C2, D2, E2, G2, A2, C3, D3, E3, G3, A3 (indices: 0, 2, 4, 7, 9, 12, 14, 16, 19, 21)
+    Array(10).fill(null).map((_, i) => {
+      const defaultNotes = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+      return { active: [0,2,3,5,7,8].includes(i), noteIdx: defaultNotes[i] };
+    })
   );
   const [bpm, setBpm] = useState(92);
   const [waveform, setWaveform] = useState<OscillatorType>("sawtooth");
@@ -538,8 +546,8 @@ export default function AndromaticClient() {
               width: 68, height: 68, borderRadius: "50%",
               background: isPlaying ? "#D4580A" : "#E0DDD5",
               border: isPlaying ? "none" : "1px solid #C0BCB4",
-              boxShadow: isPlaying 
-                ? "inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(212,88,10,0.3)" 
+              boxShadow: isPlaying
+                ? "inset 0 2px 4px rgba(0,0,0,0.4)"
                 : "inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.08)",
               cursor: "pointer",
               display: "flex",
@@ -550,10 +558,10 @@ export default function AndromaticClient() {
               {isPlaying ? (
                 <div style={{ width: 16, height: 16, background: "#F0EDE5", borderRadius: 2 }} />
               ) : (
-                <div style={{ 
-                  width: 0, height: 0, 
-                  borderLeft: "16px solid #D4580A", 
-                  borderTop: "11px solid transparent", 
+                <div style={{
+                  width: 0, height: 0,
+                  borderLeft: "16px solid #D4580A",
+                  borderTop: "11px solid transparent",
                   borderBottom: "11px solid transparent",
                   marginLeft: 4,
                 }} />
