@@ -21,6 +21,11 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Hide header on Andromatic page
+  if (pathname?.startsWith('/andromatic')) {
+    return null
+  }
+
   const isHome = pathname === '/'
   const transparent = isHome && !scrolled
 

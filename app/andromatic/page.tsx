@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 
 export default function AndromaticPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#141414', margin: 0, padding: 0 }}>
+    <div className="andromatic-page" style={{ minHeight: '100vh', background: '#141414', margin: 0, padding: 0 }}>
       <AndromaticClient />
     </div>
   )

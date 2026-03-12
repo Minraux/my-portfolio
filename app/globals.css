@@ -139,3 +139,12 @@ a.text-link:hover {
 .article-body p { margin-bottom: 1.2em; }
 .article-body p:last-child { margin-bottom: 0; }
 
+/* Andromatic page styles override */
+.andromatic-page,
+.andromatic-page * {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+.andromatic-page {
+  background: #141414 !important;
+}
+

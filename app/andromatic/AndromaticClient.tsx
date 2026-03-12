@@ -2,14 +2,51 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+// Audio Engine with Limiter
 function createAudioEngine() {
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  
+  // Soft limiter (tanh waveshaper)
+  const limiter = ctx.createWaveShaper();
+  const curve = new Float32Array(2048);
+  for (let i = 0; i < 2048; i++) {
+    const x = (i * 2) / 2048 - 1;
+    curve[i] = Math.tanh(x * 1.5) / 1.5;
+  }
+  limiter.curve = curve;
+  limiter.oversample = '4x';
+  
+  // Compressor - more aggressive settings
+  const compressor = ctx.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value = 20;
+  compressor.ratio.value = 8;
+  compressor.attack.value = 0.002;
+  compressor.release.value = 0.15;
+  
+  // Shape shifter for analog warmth (10% wet)
+  const shaper = ctx.createWaveShaper();
+  const shaperCurve = new Float32Array(2048);
+  for (let i = 0; i < 2048; i++) {
+    const x = (i * 2) / 2048 - 1;
+    shaperCurve[i] = Math.tanh(x * 0.8) * 0.1 + x * 0.9; // 10% saturation
+  }
+  shaper.curve = shaperCurve;
+  shaper.oversample = '2x';
+  
   const masterGain = ctx.createGain();
+  masterGain.gain.value = 0.35;
+  
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 2048;
-  masterGain.connect(analyser);
+  
+  // Signal chain: masterGain → shaper → compressor → limiter → analyser → destination
+  masterGain.connect(shaper);
+  shaper.connect(compressor);
+  compressor.connect(limiter);
+  limiter.connect(analyser);
   analyser.connect(ctx.destination);
-  masterGain.gain.value = 0.7;
+  
   return { ctx, masterGain, analyser };
 }
 
@@ -34,16 +71,34 @@ function playStep(engine: any, note: number, waveform: OscillatorType, attack: n
   osc.stop(now + attack + decay + 0.05);
 }
 
-function Knob({ label, value, min, max, onChange, unit = "" }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void; unit?: string }) {
+// Label component
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ 
+      fontSize: 7, 
+      letterSpacing: "0.28em", 
+      color: "#9A9590", 
+      textTransform: "uppercase", 
+      marginBottom: 6 
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// Knob Component - Photophon style
+function Knob({ label, value, min, max, onChange, unit = "", accent, displayValue }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void; unit?: string; accent?: boolean; displayValue?: number }) {
   const dragging = useRef(false);
   const startY = useRef(0);
   const startVal = useRef(0);
-  const angle = -135 + ((value - min) / (max - min)) * 270;
+  const norm = (value - min) / (max - min);
+  const angle = -135 + norm * 270;
 
   const onMouseMove = useCallback((e: MouseEvent) => {
     if (!dragging.current) return;
-    const delta = (startY.current - e.clientY) / 120;
-    const newVal = Math.min(max, Math.max(min, startVal.current + delta * (max - min)));
+    const cy = e.clientY;
+    const delta = (startY.current - cy) / 120;
+    const newVal = Math.max(min, Math.min(max, startVal.current + delta * (max - min)));
     onChange(newVal);
   }, [min, max, onChange]);
 
@@ -61,75 +116,163 @@ function Knob({ label, value, min, max, onChange, unit = "" }: { label: string; 
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const displayVal = value < 10 ? value.toFixed(2) : Math.round(value);
+  const displayVal = displayValue !== undefined ? Math.round(displayValue) : Math.round(norm * 100);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, userSelect: "none" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, userSelect: "none" }}>
       <div
         onMouseDown={onMouseDown}
         style={{
-          width: 40, height: 40, borderRadius: "50%",
-          background: "linear-gradient(145deg, #3a3a3a 0%, #1e1e1e 100%)",
-          boxShadow: "3px 3px 6px #111, -1px -1px 3px #555, inset 0 1px 2px rgba(255,255,255,0.06)",
+          width: 48, height: 48, borderRadius: "50%",
+          background: "radial-gradient(circle at 33% 33%, #F8F4EC, #D8D4CC)",
+          border: "1px solid #C0BCB4",
+          boxShadow: "0 3px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.85)",
           cursor: "ns-resize", position: "relative",
           display: "flex", alignItems: "center", justifyContent: "center",
-          transform: `rotate(${angle}deg)`, transition: "transform 0.04s",
         }}
       >
-        <div style={{ width: 2, height: 12, background: "#E8520A", borderRadius: 1, position: "absolute", top: 5 }} />
+        {[...Array(11)].map((_, i) => {
+          const tickAngle = -135 + i * 27;
+          const rad = (tickAngle - 90) * Math.PI / 180;
+          const r = 20;
+          return (
+            <div key={i} style={{
+              position: "absolute",
+              width: i % 5 === 0 ? 2 : 1,
+              height: i % 5 === 0 ? 5 : 3,
+              background: "#B8B4AC",
+              left: 24 + r * Math.cos(rad) - (i % 5 === 0 ? 1 : 0.5),
+              top: 24 + r * Math.sin(rad) - (i % 5 === 0 ? 2.5 : 1.5),
+              transform: `rotate(${tickAngle}deg)`,
+              transformOrigin: "center",
+            }} />
+          );
+        })}
+        <div style={{
+          position: "absolute", width: 3, height: 14,
+          background: accent ? "#D4580A" : "#2A2A2A", borderRadius: 2,
+          transformOrigin: "50% 85%",
+          transform: `rotate(${angle}deg)`,
+          top: 8,
+        }} />
       </div>
       <div style={{ textAlign: "center", lineHeight: 1.3 }}>
-        <div style={{ fontFamily: "'Helvetica Neue', Helvetica, sans-serif", fontSize: 8, letterSpacing: "0.14em", color: "#7a7a7a", textTransform: "uppercase" }}>{label}</div>
-        <div style={{ fontFamily: "monospace", fontSize: 8, color: "#555", marginTop: 1 }}>{displayVal}{unit}</div>
+        <div style={{ fontSize: 7, letterSpacing: "0.18em", color: "#9A9590", textTransform: "uppercase", marginBottom: 1 }}>{label}</div>
+        <div style={{ fontSize: 8, color: "#555", fontFamily: "'Helvetica Neue', monospace" }}>{displayVal}<span style={{ fontSize: 6, color: "#9A9590" }}>{unit}</span></div>
       </div>
     </div>
   );
 }
 
+// Waveform pictogram
+function WaveformIcon({ type, active }: { type: OscillatorType; active: boolean }) {
+  const color = active ? "#fff" : "#666";
+  const size = 14;
+  
+  if (type === "sine") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14">
+        <path d="M1 7 Q4 2, 7 7 T13 7" stroke={color} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (type === "triangle") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14">
+        <path d="M1 10 L4 4 L7 10 L10 4 L13 10" stroke={color} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  if (type === "sawtooth") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14">
+        <path d="M1 10 L6 4 L6 10 L11 4 L11 10" stroke={color} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  if (type === "square") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14">
+        <path d="M1 10 L1 4 L5 4 L5 10 L9 10 L9 4 L13 4" stroke={color} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+  }
+  return null;
+}
+
+// Shuffle Toggle Component - toggle switch style
+function ShuffleToggle({ onShuffle, active }: { onShuffle: () => void; active: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <div style={{ fontSize: 6, letterSpacing: "0.18em", color: "#888", textTransform: "uppercase" }}>SHUFFLE</div>
+      <button
+        onClick={onShuffle}
+        style={{
+          width: 52,
+          height: 28,
+          borderRadius: 14,
+          background: "#E0DDD5",
+          border: "1px solid #C0BCB4",
+          cursor: "pointer",
+          position: "relative",
+          transition: "all 0.15s",
+          boxShadow: "inset 0 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div style={{
+          position: "absolute",
+          top: 3,
+          left: active ? 27 : 3,
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          background: "linear-gradient(145deg, #F8F4EC, #D8D4CC)",
+          border: "1px solid #C0BCB4",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+          transition: "left 0.15s",
+        }} />
+      </button>
+    </div>
+  );
+}
+
+// Oscilloscope
 function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRefObject<any>; isPlaying: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number | null>(null);
+  const waveRef = useRef(new Float32Array(128));
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const bufferLength = 1024;
-    const dataArray = new Uint8Array(bufferLength);
+    const bufferLength = 512;
+    const dataArray = new Float32Array(bufferLength);
 
     const draw = () => {
       animRef.current = requestAnimationFrame(draw);
       const W = canvas.width, H = canvas.height;
-      ctx.fillStyle = "rgba(8, 12, 8, 0.3)";
+      
+      ctx.fillStyle = "#F0EDE5";
       ctx.fillRect(0, 0, W, H);
-
-      ctx.strokeStyle = "rgba(40, 70, 40, 0.35)";
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i <= 4; i++) {
-        ctx.beginPath(); ctx.moveTo((W / 4) * i, 0); ctx.lineTo((W / 4) * i, H); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, (H / 4) * i); ctx.lineTo(W, (H / 4) * i); ctx.stroke();
-      }
 
       const analyser = analyserRef.current;
       if (analyser && isPlaying) {
-        analyser.getByteTimeDomainData(dataArray);
-      } else {
-        for (let i = 0; i < bufferLength; i++) dataArray[i] = 128;
+        analyser.getFloatTimeDomainData(dataArray);
+        waveRef.current = dataArray.slice(0, 128);
       }
 
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "#00ee44";
-      ctx.strokeStyle = "#2eee66";
+      ctx.strokeStyle = "#2A2A2A";
       ctx.lineWidth = 1.5;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      for (let i = 0; i < bufferLength; i++) {
-        const x = (i / bufferLength) * W;
-        const y = (dataArray[i] / 128.0) * (H / 2);
+      for (let i = 0; i < 128; i++) {
+        const x = (i / 128) * W;
+        const y = H / 2 + (waveRef.current[i] || 0) * H * 0.42;
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       ctx.stroke();
-      ctx.shadowBlur = 0;
     };
 
     draw();
@@ -137,26 +280,22 @@ function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRe
   }, [analyserRef, isPlaying]);
 
   return (
-    <div style={{
-      position: "relative", background: "#080c08", borderRadius: 4, overflow: "hidden",
-      boxShadow: "inset 0 0 24px rgba(0,0,0,0.9), inset 0 0 50px rgba(0,15,0,0.5)",
-      border: "1px solid #161616",
-    }}>
-      <canvas ref={canvasRef} width={556} height={130} style={{ display: "block" }} />
-      <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 6, left: 10, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 7, letterSpacing: "0.18em", color: "rgba(46,160,80,0.45)", textTransform: "uppercase" }}>
-        Oscilloscope
+    <div style={{ borderBottom: "1px solid #CCC8C0", padding: "5px 14px 4px", background: "#F0EDE5" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+        <span style={{ fontSize: 6, letterSpacing: "0.3em", color: "#9A9590", textTransform: "uppercase" }}>AUSGANG</span>
+        <span style={{ fontSize: 6, letterSpacing: "0.2em", color: "#9A9590" }}>{isPlaying ? "LIVE" : "STANDBY"}</span>
       </div>
-      <div style={{ position: "absolute", top: 6, right: 10, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 7, letterSpacing: "0.18em", color: "rgba(46,160,80,0.45)", textTransform: "uppercase" }}>
-        Andromatic · 1968
-      </div>
+      <canvas ref={canvasRef} width={556} height={32} style={{ width: "100%", height: 32, display: "block" }} />
     </div>
   );
 }
 
-const SCALE = [110, 123.47, 138.59, 146.83, 164.81, 185, 196, 220, 246.94, 261.63];
-const NOTE_NAMES = ["A2","B2","C#3","D3","E3","F#3","G3","A3","B3","C4"];
-const WAVEFORMS = ["sine", "triangle", "sawtooth", "square"];
+// 5 octaves
+const SCALE = [
+  110, 116.54, 123.47, 130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185, 196, 207.65, 220, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392, 415.3, 440, 466.16, 493.88, 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880, 932.33, 987.77, 1046.5, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760, 1864.66
+];
+const NOTE_NAMES = ["A2","A#2","B2","C3","C#3","D3","D#3","E3","F3","F#3","G3","G#3","A3","A#3","B3","C4","C#4","D4","D#4","E4","F4","F#4","G4","G#4","A4","A#4","B4","C5","C#5","D5","D#5","E5","F5","F#5","G5","G#5","A5","A#5","B5","C6","C#6","D6","D#6","E6","F6","F#6","G6","G#6","A6","A#6","B6","C7"];
+const WAVEFORMS: OscillatorType[] = ["sine", "triangle", "sawtooth", "square"];
 
 interface Step { active: boolean; noteIdx: number; }
 
@@ -171,17 +310,23 @@ export default function AndromaticClient() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [steps, setSteps] = useState<Step[]>(
-    Array(10).fill(null).map((_, i) => ({ active: [0,2,3,5,7,8].includes(i), noteIdx: i }))
+    Array(10).fill(null).map((_, i) => ({ active: [0,2,3,5,7,8].includes(i), noteIdx: i * 5 }))
   );
   const [bpm, setBpm] = useState(92);
   const [waveform, setWaveform] = useState<OscillatorType>("sawtooth");
   const [attack, setAttack] = useState(0.015);
-  const [decay, setDecay] = useState(0.28);
+  const [decay, setDecay] = useState(0.5);
   const [filterFreq, setFilterFreq] = useState(900);
   const [volume, setVolume] = useState(0.7);
+  const [shuffleActive, setShuffleActive] = useState(false);
 
   stepsRef.current = steps;
   paramsRef.current = { bpm, waveform, attack, decay, filterFreq };
+
+  const shufflePattern = useCallback(() => {
+    setShuffleActive(!shuffleActive);
+    setSteps(s => s.map(st => ({ ...st, active: Math.random() > 0.5 })));
+  }, [shuffleActive]);
 
   const getEngine = () => {
     if (!engineRef.current) {
@@ -195,7 +340,11 @@ export default function AndromaticClient() {
   const startSeq = useCallback(() => {
     const eng = getEngine();
     eng.ctx.resume();
-    eng.masterGain.gain.value = volume;
+    // Smooth volume ramp on start
+    const now = eng.ctx.currentTime;
+    eng.masterGain.gain.cancelScheduledValues(now);
+    eng.masterGain.gain.setValueAtTime(eng.masterGain.gain.value, now);
+    eng.masterGain.gain.linearRampToValueAtTime(volume * 0.35, now + 0.1);
     stepRef.current = 0;
     const tick = () => {
       const i = stepRef.current % 10;
@@ -206,7 +355,10 @@ export default function AndromaticClient() {
       stepRef.current++;
     };
     tick();
-    intervalRef.current = window.setInterval(tick, (60 / bpm) * 500);
+    // BPM = quarter notes per minute: interval = 60000 / BPM ms for quarter note
+    // But we have 8th notes (half beat), so interval = (60 / bpm) * 1000 / 2 = (60 / bpm) * 500
+    // Actually for 8th notes: interval = 30000 / bpm
+    intervalRef.current = window.setInterval(tick, 30000 / bpm);
     setIsPlaying(true);
   }, [bpm, volume]);
 
@@ -232,12 +384,19 @@ export default function AndromaticClient() {
         const p = paramsRef.current;
         if (s.active) playStep(eng, SCALE[s.noteIdx], p.waveform, p.attack, p.decay, p.filterFreq);
         stepRef.current++;
-      }, (60 / bpm) * 500);
+      }, 30000 / bpm);
     }
   }, [bpm]);
 
   useEffect(() => {
-    if (engineRef.current) engineRef.current.masterGain.gain.value = volume;
+    if (engineRef.current) {
+      const eng = engineRef.current;
+      const now = eng.ctx.currentTime;
+      // Smooth volume change to avoid clicks/pops
+      eng.masterGain.gain.cancelScheduledValues(now);
+      eng.masterGain.gain.setValueAtTime(eng.masterGain.gain.value, now);
+      eng.masterGain.gain.linearRampToValueAtTime(volume * 0.35, now + 0.1);
+    }
   }, [volume]);
 
   useEffect(() => {
@@ -245,62 +404,71 @@ export default function AndromaticClient() {
   }, []);
 
   const toggleStep = (i: number) => setSteps(s => s.map((st, idx) => idx === i ? { ...st, active: !st.active } : st));
-  const changeNote = (i: number, dir: number) => setSteps(s => s.map((st, idx) => idx === i ? { ...st, noteIdx: Math.min(9, Math.max(0, st.noteIdx + dir)) } : st));
+  const changeNote = (i: number, dir: number) => setSteps(s => s.map((st, idx) => idx === i ? { ...st, noteIdx: Math.min(SCALE.length - 1, Math.max(0, st.noteIdx + dir)) } : st));
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#141414",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'Helvetica Neue', Helvetica, sans-serif",
-      padding: 20,
+      minHeight: "100vh",
+      background: "#EDE9E0",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      padding: 40,
+      boxSizing: "border-box",
     }}>
       <div style={{
-        width: 620,
-        background: "linear-gradient(168deg, #D6D1C6 0%, #C9C4B9 50%, #BFBAB0 100%)",
-        borderRadius: 10,
-        boxShadow: "0 24px 64px rgba(0,0,0,0.7), 0 2px 0px rgba(255,255,255,0.2) inset, 0 -2px 4px rgba(0,0,0,0.25) inset",
-        padding: "22px 26px 26px",
+        width: "100%",
+        maxWidth: 640,
+        background: "#E8E4DC",
+        borderRadius: 6,
+        border: "1px solid #CCC8C0",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)",
+        overflow: "hidden",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14 }}>
+        {/* Header */}
+        <div style={{
+          padding: "14px 20px",
+          background: "#F0EDE5",
+          borderBottom: "1px solid #CCC8C0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 300, letterSpacing: "0.28em", color: "#1e1e1e", textTransform: "uppercase" }}>Andromatic</div>
-            <div style={{ fontSize: 7.5, letterSpacing: "0.22em", color: "#999", textTransform: "uppercase", marginTop: 2 }}>
-              Ten Step Pattern Sequencer · E. Kurenniemi · 1968
+            <div style={{ fontSize: 9, fontWeight: 300, letterSpacing: "0.28em", color: "#1E1E1E", textTransform: "uppercase" }}>Andromatic</div>
+            <div style={{ fontSize: 6.5, letterSpacing: "0.2em", color: "#999", textTransform: "uppercase", marginTop: 3 }}>
+              Ten Step Pattern Sequencer
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 7, letterSpacing: "0.12em", color: "#bbb", textTransform: "uppercase" }}>Scenkonstmuseet</div>
-            <div style={{ fontSize: 7, letterSpacing: "0.12em", color: "#ccc", textTransform: "uppercase" }}>Stockholm</div>
+            <div style={{ fontSize: 6, letterSpacing: "0.12em", color: "#BBB", textTransform: "uppercase" }}>Scenkonstmuseet</div>
+            <div style={{ fontSize: 6, letterSpacing: "0.12em", color: "#CCC", textTransform: "uppercase", marginTop: 2 }}>Stockholm</div>
           </div>
         </div>
 
+        {/* Oscilloscope */}
         <Oscilloscope analyserRef={analyserRef} isPlaying={isPlaying} />
 
-        <div style={{ marginTop: 18 }}>
-          <div style={{ fontSize: 7.5, letterSpacing: "0.2em", color: "#888", textTransform: "uppercase", marginBottom: 9 }}>Sequence</div>
-          <div style={{ display: "flex", gap: 5 }}>
+        {/* Sequencer */}
+        <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid #CCC8C0" }}>
+          <Label>Sequence</Label>
+          <div style={{ display: "flex", gap: 4 }}>
             {steps.map((step, i) => (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                 <div style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: currentStep === i ? "#E8520A" : "#333",
-                  boxShadow: currentStep === i ? "0 0 7px #E8520A, 0 0 14px rgba(232,82,10,0.5)" : "none",
-                  transition: "all 0.05s",
+                  width: 4, height: 4, borderRadius: "50%",
+                  background: currentStep === i ? "#D4580A" : "#ccc",
+                  boxShadow: currentStep === i ? "0 0 4px rgba(212,88,10,0.4)" : "none",
                 }} />
                 <button onClick={() => changeNote(i, 1)} style={{
-                  width: "100%", height: 9, background: "none", border: "none",
-                  color: "#999", fontSize: 7, cursor: "pointer", padding: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  lineHeight: 1,
+                  width: "100%", height: 8, background: "none", border: "none",
+                  color: "#999", fontSize: 6, cursor: "pointer", padding: 0,
                 }}>▲</button>
                 <button onClick={() => toggleStep(i)} style={{
-                  width: "100%", height: 36, borderRadius: 3, border: "none", cursor: "pointer",
-                  background: step.active
-                    ? "linear-gradient(180deg, #3c3c3c 0%, #282828 100%)"
-                    : "linear-gradient(180deg, #b3aea3 0%, #a39e95 100%)",
-                  boxShadow: step.active
-                    ? "inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.04)"
-                    : "0 2px 4px rgba(0,0,0,0.22), inset 0 1px 1px rgba(255,255,255,0.28)",
+                  width: "100%", height: 32, borderRadius: 2, border: "1px solid #C0BCB4", cursor: "pointer",
+                  background: step.active ? "#1E1E1E" : "#E0DDD5",
+                  boxShadow: step.active ? "inset 0 1px 2px rgba(0,0,0,0.4)" : "inset 0 1px 0 rgba(255,255,255,0.6)",
                   transition: "all 0.09s",
                   position: "relative",
                 }}>
@@ -308,83 +476,107 @@ export default function AndromaticClient() {
                     <div style={{
                       position: "absolute", top: "50%", left: "50%",
                       transform: "translate(-50%, -50%)",
-                      width: 4, height: 4, borderRadius: "50%",
-                      background: currentStep === i ? "#E8520A" : "#E8BA6A",
-                      boxShadow: currentStep === i ? "0 0 6px #E8520A" : "none",
-                      transition: "all 0.05s",
+                      width: 3, height: 3, borderRadius: "50%",
+                      background: currentStep === i ? "#D4580A" : "#F0EDE5",
                     }} />
                   )}
                 </button>
                 <button onClick={() => changeNote(i, -1)} style={{
-                  width: "100%", height: 9, background: "none", border: "none",
-                  color: "#999", fontSize: 7, cursor: "pointer", padding: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  lineHeight: 1,
+                  width: "100%", height: 8, background: "none", border: "none",
+                  color: "#999", fontSize: 6, cursor: "pointer", padding: 0,
                 }}>▼</button>
-                <div style={{ fontSize: 6.5, color: "#888", letterSpacing: "0.03em", fontFamily: "monospace" }}>
-                  {NOTE_NAMES[step.noteIdx]}
-                </div>
-                <div style={{ fontSize: 6.5, color: "#aaa", letterSpacing: "0.05em" }}>{i + 1}</div>
+                <div style={{ fontSize: 6, color: "#9A9590", fontFamily: "monospace" }}>{NOTE_NAMES[step.noteIdx]}</div>
+                <div style={{ fontSize: 5.5, color: "#B8B4AC" }}>{i + 1}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ height: 1, background: "rgba(0,0,0,0.12)", margin: "18px 0 16px" }} />
-
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 0 }}>
-          <div style={{ display: "flex", gap: 18, flex: 1 }}>
-            <Knob label="Tempo" value={bpm} min={40} max={200} onChange={setBpm} unit=" bpm" />
-            <Knob label="Attack" value={attack} min={0.001} max={0.5} onChange={setAttack} />
-            <Knob label="Decay" value={decay} min={0.05} max={2} onChange={setDecay} />
-            <Knob label="Filter" value={filterFreq} min={100} max={8000} onChange={setFilterFreq} unit=" hz" />
-            <Knob label="Volume" value={volume} min={0} max={1} onChange={setVolume} />
+        {/* Controls - Original Andromatic UX */}
+        <div style={{ padding: "16px" }}>
+          {/* 5 Knobs in a row */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 16 }}>
+            <Knob label="TEMPO" value={bpm} min={10} max={220} onChange={setBpm} unit=" bpm" displayValue={bpm} />
+            <Knob label="ATTACK" value={attack} min={0.001} max={3} onChange={setAttack} unit="" />
+            <Knob label="DECAY" value={decay} min={0.05} max={10} onChange={setDecay} unit="" />
+            <Knob label="FILTER" value={filterFreq} min={100} max={8000} onChange={setFilterFreq} unit="" />
+            <Knob label="VOLUME" value={volume} min={0} max={1} onChange={setVolume} accent />
           </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 3.5, marginLeft: 22 }}>
-            <div style={{ fontSize: 7.5, letterSpacing: "0.14em", color: "#888", textTransform: "uppercase", marginBottom: 2 }}>Wave</div>
-            {WAVEFORMS.map(w => (
-              <button key={w} onClick={() => setWaveform(w as OscillatorType)} style={{
-                height: 15, width: 66, border: `1px solid ${waveform === w ? "#555" : "#bbb"}`,
-                borderRadius: 2, cursor: "pointer",
-                background: waveform === w ? "#2a2a2a" : "transparent",
-                color: waveform === w ? "#E8BA6A" : "#777",
-                fontSize: 7, letterSpacing: "0.14em", textTransform: "uppercase",
-                fontFamily: "'Helvetica Neue', sans-serif",
-                transition: "all 0.1s",
-              }}>{w}</button>
-            ))}
-          </div>
-
-          <div style={{ marginLeft: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          
+          {/* Waveform + Play/Stop + Shuffle - Golden ratio layout */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 24 }}>
+            {/* Waveform buttons */}
+            <div>
+              <div style={{ fontSize: 6, letterSpacing: "0.18em", color: "#888", textTransform: "uppercase", marginBottom: 4, textAlign: "center" }}>WAVE</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 3 }}>
+                {WAVEFORMS.map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => setWaveform(w)}
+                    style={{
+                      width: 32,
+                      height: 28,
+                      background: waveform === w ? "#1E1E1E" : "#E0DDD5",
+                      color: waveform === w ? "#F0EDE5" : "#9A9590",
+                      border: waveform === w ? "none" : "1px solid #C0BCB4",
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      transition: "all 0.12s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <WaveformIcon type={w} active={waveform === w} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Play/Stop button - larger, golden ratio proportion */}
             <button onClick={handlePlayStop} style={{
-              width: 50, height: 50, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: isPlaying
-                ? "linear-gradient(145deg, #c0392b, #8e1e14)"
-                : "linear-gradient(145deg, #2e2e2e, #1a1a1a)",
-              boxShadow: isPlaying
-                ? "0 0 18px rgba(192,57,43,0.55), 0 3px 8px rgba(0,0,0,0.5)"
-                : "3px 3px 7px #111, -1px -1px 3px #555",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.15s",
+              width: 68, height: 68, borderRadius: "50%",
+              background: isPlaying ? "#D4580A" : "#E0DDD5",
+              border: isPlaying ? "none" : "1px solid #C0BCB4",
+              boxShadow: isPlaying 
+                ? "inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(212,88,10,0.3)" 
+                : "inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.08)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.12s",
             }}>
               {isPlaying ? (
-                <div style={{ width: 13, height: 13, background: "rgba(255,255,255,0.85)", borderRadius: 2 }} />
+                <div style={{ width: 16, height: 16, background: "#F0EDE5", borderRadius: 2 }} />
               ) : (
-                <div style={{ width: 0, height: 0, borderLeft: "13px solid #E8520A", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
+                <div style={{ 
+                  width: 0, height: 0, 
+                  borderLeft: "16px solid #D4580A", 
+                  borderTop: "11px solid transparent", 
+                  borderBottom: "11px solid transparent",
+                  marginLeft: 4,
+                }} />
               )}
             </button>
-            <div style={{ fontSize: 7, color: "#888", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-              {isPlaying ? "Stop" : "Start"}
-            </div>
+            
+            {/* Shuffle toggle */}
+            <ShuffleToggle onShuffle={shufflePattern} active={shuffleActive} />
           </div>
         </div>
 
-        <div style={{ marginTop: 18, paddingTop: 12, borderTop: "1px solid rgba(0,0,0,0.12)", display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 7, color: "#b0b0b0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        {/* Footer */}
+        <div style={{
+          borderTop: "1px solid #CCC8C0",
+          background: "#E0DDD5",
+          padding: "8px 20px",
+          display: "flex",
+          justifyContent: "space-between",
+        }}>
+          <div style={{ fontSize: 6.5, color: "#B0B0B0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
             Andromeda Studio · Nacka, Sweden
           </div>
-          <div style={{ fontSize: 7, color: "#b0b0b0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          <div style={{ fontSize: 6.5, color: "#B0B0B0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
             Ralph Lundsten · Erkki Kurenniemi
           </div>
         </div>
