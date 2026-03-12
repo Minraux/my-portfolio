@@ -15,6 +15,7 @@ const cormorant = Cormorant({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://dobrovolski.space'),
   title: {
     default: 'Влад Добровольский',
     template: '%s — Влад Добровольский',
