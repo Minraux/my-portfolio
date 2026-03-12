@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 export default function AnsPage() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -12,50 +12,26 @@ export default function AnsPage() {
         const res = await fetch('/ans.html')
         const html = await res.text()
         
-        if (containerRef.current) {
-          // Parse HTML
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(html, 'text/html')
+        if (iframeRef.current) {
+          const iframe = iframeRef.current
+          const doc = iframe.contentDocument || iframe.contentWindow?.document
           
-          // Get styles and inject
-          const styles = Array.from(doc.querySelectorAll('style'))
-          styles.forEach(style => {
-            const newStyle = document.createElement('style')
-            newStyle.textContent = style.textContent
-            document.head.appendChild(newStyle)
-          })
-          
-          // Set body classes and styles
-          document.body.style.margin = '0'
-          document.body.style.padding = '0'
-          document.body.style.boxSizing = 'border-box'
-          
-          // Get all scripts and execute in order
-          const scripts = Array.from(doc.querySelectorAll('script'))
-          
-          for (const script of scripts) {
-            const newScript = document.createElement('script')
+          if (doc) {
+            doc.open()
+            doc.write(html)
+            doc.close()
             
-            // Copy attributes
-            for (const attr of script.attributes) {
-              newScript.setAttribute(attr.name, attr.value)
-            }
+            // Wait for iframe to fully load
+            await new Promise<void>((resolve) => {
+              if (iframe.contentWindow?.document.readyState === 'complete') {
+                resolve()
+              } else {
+                iframe.onload = () => resolve()
+              }
+            })
             
-            if (script.src) {
-              // External script - wait for load
-              await new Promise((resolve, reject) => {
-                newScript.onload = resolve
-                newScript.onerror = reject
-                document.head.appendChild(newScript)
-              })
-            } else {
-              // Inline script
-              newScript.textContent = script.textContent
-              document.head.appendChild(newScript)
-            }
+            setLoaded(true)
           }
-          
-          setLoaded(true)
         }
       } catch (err) {
         console.error('Error loading ANS:', err)
@@ -63,26 +39,21 @@ export default function AnsPage() {
     }
 
     loadAns()
-    
-    return () => {
-      // Cleanup on unmount
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ''
-      }
-    }
   }, [])
 
   return (
-    <div ref={containerRef} style={{ minHeight: '100vh' }}>
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
       {!loaded && (
         <div style={{ 
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'center', 
-          minHeight: '100vh',
+          justifyContent: 'center',
           fontFamily: 'Barlow, Helvetica, Arial, sans-serif',
           color: '#1A1916',
-          background: '#E8E4DC'
+          background: '#E8E4DC',
+          zIndex: 10
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '24px', marginBottom: '16px', fontWeight: 500, letterSpacing: '0.2em' }}>АНС</div>
@@ -90,6 +61,17 @@ export default function AnsPage() {
           </div>
         </div>
       )}
+      <iframe
+        ref={iframeRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          display: loaded ? 'block' : 'none'
+        }}
+        title="АНС Синтезатор"
+        sandbox="allow-scripts allow-same-origin"
+      />
     </div>
   )
 }
