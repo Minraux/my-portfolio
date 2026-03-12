@@ -32,6 +32,20 @@ Sanity Studio доступна на `/studio`.
 - `sanity/` — CMS конфигурация (schemas, queries, lib)
 - `app/globals.css` — глобальные стили (nav-pill, detail-grid, etc.)
 
+## Проекты
+
+### Andromatic
+10-шаговый паттерн-секвенсор (Эркки Куренниеми, 1968).
+
+**URL:** `/andromatic`
+
+- 5 октав (A2–C7), 4 волны (sine, triangle, sawtooth, square)
+- Контроллеры: TEMPO, ATTACK, DECAY, FILTER, VOLUME
+- Shuffle для рандомизации паттерна
+- Осциллограф в реальном времени
+
+📄 [Документация](docs/ANDROMATIC.md)
+
 ## Оптимизация (март 2026)
 
 ✅ **ISR кэширование** — Sanity запросы кэшируются на 1 час (`revalidate: 3600`)
