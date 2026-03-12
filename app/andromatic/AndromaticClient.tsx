@@ -241,8 +241,10 @@ function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRe
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number | null>(null);
   const waveRef = useRef(new Float32Array(128));
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -253,7 +255,7 @@ function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRe
     const draw = () => {
       animRef.current = requestAnimationFrame(draw);
       const W = canvas.width, H = canvas.height;
-      
+
       ctx.fillStyle = "#F0EDE5";
       ctx.fillRect(0, 0, W, H);
 
@@ -277,7 +279,19 @@ function Oscilloscope({ analyserRef, isPlaying }: { analyserRef: React.MutableRe
 
     draw();
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [analyserRef, isPlaying]);
+  }, [isPlaying]);
+
+  if (!mounted) {
+    return (
+      <div style={{ borderBottom: "1px solid #CCC8C0", padding: "5px 14px 4px", background: "#F0EDE5" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+          <span style={{ fontSize: 6, letterSpacing: "0.3em", color: "#9A9590", textTransform: "uppercase" }}>AUSGANG</span>
+          <span style={{ fontSize: 6, letterSpacing: "0.2em", color: "#9A9590" }}>STANDBY</span>
+        </div>
+        <canvas ref={canvasRef} width={556} height={32} style={{ width: "100%", height: 32, display: "block" }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ borderBottom: "1px solid #CCC8C0", padding: "5px 14px 4px", background: "#F0EDE5" }}>
