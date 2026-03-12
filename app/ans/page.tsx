@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -11,16 +11,16 @@ export default function AnsPage() {
       try {
         const res = await fetch('/ans.html')
         const html = await res.text()
-        
+
         if (iframeRef.current) {
           const iframe = iframeRef.current
           const doc = iframe.contentDocument || iframe.contentWindow?.document
-          
+
           if (doc) {
             doc.open()
             doc.write(html)
             doc.close()
-            
+
             // Wait for iframe to fully load
             await new Promise<void>((resolve) => {
               if (iframe.contentWindow?.document.readyState === 'complete') {
@@ -29,7 +29,7 @@ export default function AnsPage() {
                 iframe.onload = () => resolve()
               }
             })
-            
+
             setLoaded(true)
           }
         }
@@ -44,11 +44,11 @@ export default function AnsPage() {
   return (
     <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
       {!loaded && (
-        <div style={{ 
+        <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          display: 'flex', 
-          alignItems: 'center', 
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'Barlow, Helvetica, Arial, sans-serif',
           color: '#1A1916',
