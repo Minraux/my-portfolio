@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>АНС — Синтезатор Мурзина</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #E8E4DC;
+  --surface:  #F0EDE6;
+  --panel:    #E0DDD6;
+  --panel2:   #D8D4CC;
+  --border:   #C4C0B8;
+  --border2:  #D0CCC4;
+  --ink:      #1A1916;
+  --ink2:     #605C58;
+  --ink3:     #A4A09A;
+  --orange:   #D44F00;
+  --orange2:  #B84400;
+  --font:     'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Subtle raised surface shadow — core Rams skeuomorphism token */
+  --raised:   0 1px 0 rgba(255,255,255,0.72) inset,
+              0 -1px 0 rgba(0,0,0,0.06) inset,
+              0 2px 4px rgba(0,0,0,0.10),
+              0 1px 0 rgba(0,0,0,0.04);
+  --pressed:  0 1px 0 rgba(0,0,0,0.05) inset,
+              0 2px 5px rgba(0,0,0,0.12) inset,
+              0 1px 0 rgba(255,255,255,0.18) inset;
+  --inset-well: 0 1px 3px rgba(0,0,0,0.18) inset,
+                0 1px 0 rgba(255,255,255,0.6);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────────────────── */
+#header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+#brand { display:flex; align-items:center; gap:10px; margin-right:28px; }
+
+/* Orange indicator dot — Braun-style accent */
+#logo-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #E86820, var(--orange));
+  box-shadow: 0 1px 2px rgba(212,79,0,0.4);
+  flex-shrink: 0;
+}
+
+#logo {
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.22em; color: var(--ink);
+  text-transform: uppercase;
+}
+
+#subtitle {
+  font-size: 10px; font-weight: 300;
+  color: var(--ink3); letter-spacing: 0.07em;
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
+}
+
+#header-right { margin-left:auto; display:flex; align-items:center; gap:20px; }
+
+#status { font-size: 11px; color: var(--ink2); font-weight: 400; }
+#status-dot {
+  background: var(--ink3);
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+#status-dot.playing {
+  background: var(--orange);
+  box-shadow: 0 0 6px rgba(212,79,0,0.6), 0 0 12px rgba(212,79,0,0.3);
+}
+
+/* VU bars */
+#vu { display:flex; gap:2px; align-items:flex-end; height:16px; }
+.vu-bar {
+  width: 2px; height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  transition: height .12s ease, background .12s ease;
+}
+
+/* ── MAIN ────────────────────────────────────────────────────────────────────── */
+#main { display:flex; flex:1; min-height:0; overflow:hidden; }
+
+/* Freq axis */
+#freq-axis {
+  width: 68px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  box-shadow: 1px 0 3px rgba(0,0,0,0.05);
+  position: relative; flex-shrink: 0; overflow: hidden;
+  z-index: 1;
+}
+
+.freq-label {
+  position: absolute; right: 8px;
+  font-size: 8px; font-weight: 300; color: var(--ink3);
+  text-align: right; transform: translateY(-50%);
+  line-height: 1.5; white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.freq-label small { display:block; font-size:7px; opacity:.5; }
+
+#hz-readout {
+  position: absolute; bottom: 10px; left:0; right:0;
+  text-align: center; font-size: 9px; font-weight: 500;
+  color: var(--orange); display: none; letter-spacing:.04em;
+}
+
+/* Canvas area */
+#canvas-outer {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0; overflow: hidden;
+}
+
+/* Ruler */
+#ruler-wrap {
+  height: 22px; flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+#ruler-canvas { display:block; }
+#ruler-ph-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+/* Canvas scroll — inset well effect */
+#canvas-scroll {
+  flex: 1; overflow-x: auto; overflow-y: hidden;
+  position: relative; cursor: crosshair;
+  background: #000000;
+  box-shadow: var(--inset-well);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) var(--panel);
+}
+#canvas-scroll::-webkit-scrollbar { height: 5px; }
+#canvas-scroll::-webkit-scrollbar-track { background: var(--panel); }
+#canvas-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+#canvas-scroll::-webkit-scrollbar-thumb:hover { background: var(--ink3); }
+
+#canvas-wrap { position: relative; }
+#canvas-main, #canvas-over {
+  position: absolute; top:0; left:0; display:block;
+}
+#canvas-over { pointer-events:none; }
+
+/* ── CONTROLS ────────────────────────────────────────────────────────────────── */
+#controls {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.07);
+  padding: 6px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  row-gap: 4px;
+  min-height: fit-content;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* Milled dividers */
+.cg {
+  display:flex; align-items:center; gap:6px;
+  padding: 0 10px;
+  height: fit-content;
+  border-right: 1px solid var(--border2);
+  position: relative;
+  white-space: nowrap;
+}
+.cg::after {
+  content: '';
+  position: absolute; right: -1px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.7) 50%, transparent);
+}
+.cg:first-child { padding-left: 0; }
+.cg:last-child  { border-right: none; padding-right: 0; }
+.cg:last-child::after { display:none; }
+
+/* ── BUTTONS — physically raised ────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font);
+  font-size: 9px; font-weight: 400;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 5px 11px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-bottom-color: #B4B0A8;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--panel) 100%);
+  color: var(--ink2);
+  border-radius: 2px;
+  box-shadow: var(--raised);
+  transition: box-shadow .08s, transform .08s, background .08s;
+  height: fit-content;
+}
+.btn:hover {
+  background: linear-gradient(180deg, #F8F5EE 0%, var(--surface) 100%);
+  color: var(--ink);
+  border-color: var(--ink3);
+}
+.btn:active {
+  background: linear-gradient(180deg, var(--panel2) 0%, var(--panel) 100%);
+  box-shadow: var(--pressed);
+  transform: translateY(1px);
+  border-bottom-color: var(--border2);
+}
+
+#btn-play {
+  font-weight: 500;
+  padding: 7px 16px;
+  min-width: 80px;
+  text-align: center;
+  border-radius: 2px;
+}
+#btn-play.on {
+  background: linear-gradient(180deg, #E05800 0%, var(--orange2) 100%);
+  border-color: var(--orange2);
+  border-bottom-color: #903000;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 2px 6px rgba(212,79,0,0.35), 0 1px 0 rgba(0,0,0,0.1);
+}
+#btn-play.on:active {
+  background: linear-gradient(180deg, var(--orange2) 0%, #903000 100%);
+  box-shadow: var(--pressed);
+  transform: translateY(1px);
+}
+
+.btn.on-draw {
+  background: linear-gradient(180deg, #2A2824 0%, var(--ink) 100%);
+  border-color: #0A0A08;
+  border-bottom-color: #000;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset, 0 2px 4px rgba(0,0,0,0.25);
+}
+.btn.on-erase {
+  background: linear-gradient(180deg, #E05800 0%, var(--orange2) 100%);
+  border-color: var(--orange2); border-bottom-color: #903000;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 2px 4px rgba(212,79,0,0.3);
+}
+
+/* ── SLIDERS — physical feel ─────────────────────────────────────────────────── */
+.sg { display:flex; flex-direction:column; gap:2px; }
+.sl {
+  font-size: 7px; font-weight: 400;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink3);
+  display: flex; justify-content: space-between; gap: 6px;
+  line-height: 1;
+}
+.sl span { color: var(--orange); font-weight: 600; display: inline-block; min-width: 26px; text-align: right; }
+
+/* Slider track: inset groove */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 80px; height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #C0BDB6, #D4D0C8);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15) inset, 0 1px 0 rgba(255,255,255,0.6);
+  outline: none; cursor: pointer;
+  border: 1px solid var(--border);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--surface) 0%, var(--panel) 100%);
+  border: 1px solid var(--border);
+  border-bottom-color: #A8A4A0;
+  box-shadow: var(--raised);
+  cursor: pointer;
+  transition: background .1s;
+}
+input[type=range]::-webkit-slider-thumb:hover {
+  background: linear-gradient(145deg, #FFF8F0 0%, #F0E8E0 100%);
+  border-color: var(--orange);
+}
+input[type=range]::-webkit-slider-thumb:active {
+  background: linear-gradient(145deg, var(--panel) 0%, var(--panel2) 100%);
+  box-shadow: var(--pressed);
+}
+
+/* Zoom toggle */
+#zoom-group { display:flex; gap:4px; align-items:center; }
+#zoom-label {
+  font-size:8px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink3); white-space:nowrap;
+}
+
+/* Import */
+.file-btn {
+  font-family: var(--font);
+  font-size: 10px; font-weight: 400;
+  letter-spacing: .10em; text-transform: uppercase;
+  padding: 7px 14px; cursor: pointer;
+  border: 1px solid var(--border);
+  border-bottom-color: #B4B0A8;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--panel) 100%);
+  color: var(--ink2); border-radius: 2px;
+  display: inline-block;
+  box-shadow: var(--raised);
+  transition: all .08s;
+}
+.file-btn:hover { color:var(--ink); border-color:var(--ink3); }
+.file-btn:active { box-shadow:var(--pressed); transform:translateY(1px); }
+
+#status {
+  font-size: 9px; font-weight: 300;
+  letter-spacing: .10em; text-transform: uppercase;
+  color: var(--ink3); margin-right: 20px;
+}
+#status.on { color: var(--orange); }
+#status.warn { color: var(--orange); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="brand">
+    <div id="logo-dot"></div>
+    <span id="logo">АНС</span>
+  </div>
+  <span id="subtitle">Синтезатор · Е. А. Мурзин · 1958 – 1971</span>
+  <div id="header-right">
+    <div id="status" style="display:flex;align-items:center;gap:8px">
+      <div id="status-dot" style="width:7px;height:7px;border-radius:50%;background:#A4A09A;flex-shrink:0"></div>
+      <span id="status-text">Готов</span>
+    </div>
+    <div id="vu">
+      <div class="vu-bar" data-h="4"></div>
+      <div class="vu-bar" data-h="7"></div>
+      <div class="vu-bar" data-h="11"></div>
+      <div class="vu-bar" data-h="6"></div>
+      <div class="vu-bar" data-h="9"></div>
+      <div class="vu-bar" data-h="8"></div>
+      <div class="vu-bar" data-h="5"></div>
+      <div class="vu-bar" data-h="10"></div>
+      <div class="vu-bar" data-h="6"></div>
+      <div class="vu-bar" data-h="4"></div>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div id="freq-axis">
+    <div id="hz-readout"></div>
+  </div>
+  <div id="canvas-outer">
+    <div id="ruler-wrap">
+      <canvas id="ruler-canvas"></canvas>
+      <canvas id="ruler-ph-canvas"></canvas>
+    </div>
+    <div id="canvas-scroll">
+      <div id="canvas-wrap">
+        <canvas id="canvas-main"></canvas>
+        <canvas id="canvas-over"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+
+  <div class="cg">
+    <button class="btn" id="btn-rewind" title="В начало">⏮</button>
+    <button class="btn" id="btn-play">▶  Пуск</button>
+  </div>
+
+  <div class="cg">
+    <button class="btn on-draw" id="btn-draw">Рисовать</button>
+    <button class="btn"         id="btn-erase">Стирать</button>
+    <button class="btn"         id="btn-clear">Очистить</button>
+  </div>
+
+  <!-- Zoom -->
+  <div class="cg">
+    <div class="sg">
+      <div class="sl">Масштаб <span id="v-zoom">100%</span></div>
+      <div id="zoom-group">
+        <input type="range" id="sl-zoom" min="1" max="100" value="100" style="width:70px">
+        <button class="btn" id="btn-fit" style="padding:4px 8px;font-size:9px">Вписать</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="sg">
+      <div class="sl">Скорость <span id="v-speed">55</span></div>
+      <input type="range" id="sl-speed" min="1" max="100" value="55">
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="sg">
+      <div class="sl">Громкость <span id="v-vol">70%</span></div>
+      <input type="range" id="sl-vol" min="0" max="100" value="70">
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="sg">
+      <div class="sl">Кисть <span id="v-brush">4 px</span></div>
+      <input type="range" id="sl-brush" min="1" max="40" value="4">
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="sg">
+      <div class="sl">Тембр</div>
+      <div id="timbre-group" style="display:flex;gap:6px">
+        <button class="btn timbre-btn on-draw" data-type="sine" title="Синус" style="width:24px;height:24px;padding:0;font-size:14px;flex-shrink:0">∿</button>
+        <button class="btn timbre-btn" data-type="triangle" title="Треугольник" style="width:24px;height:24px;padding:0;font-size:14px;flex-shrink:0">△</button>
+        <button class="btn timbre-btn" data-type="sawtooth" title="Пила" style="width:24px;height:24px;padding:0;font-size:14px;flex-shrink:0">⩘</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cg">
+    <label class="file-btn">
+      Импорт
+      <input type="file" accept="image/*" id="import-file" style="display:none">
+    </label>
+  </div>
+
+</div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const NUM = 720, OCT = 10, F0 = 20;
+const CW  = 5000;   // internal canvas width
+const CH  = 720;    // internal canvas height = NUM rows
+// 5× louder than v3 (was 0.0012)
+const MAX_GAIN = 0.006;
+const THRESHOLD = 15;  // brightness threshold for silence
+const SMOOTH = 0.004;  // gain smoothing time constant
+
+const rowToFreq = r => F0 * Math.pow(2, (1 - r / (NUM - 1)) * OCT);
+
+// ─── Helper functions ──────────────────────────────────────────────────────────
+function encodeSVG(svg) {
+  return encodeURIComponent(svg).replace(/'/g, '%27').replace(/"/g, '%22');
+}
+
+function updateCursor() {
+  if (erasing) {
+    const r = Math.max(4, Math.min(64, Math.round(brushSize * _scale / 2)));
+    const size = r * 2 + 2;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'>
+      <circle cx='${r + 1}' cy='${r + 1}' r='${r}' fill='none' stroke='white' stroke-width='1.5' opacity='0.8'/>
+    </svg>`;
+    scroll.style.cursor = `url("data:image/svg+xml,${encodeSVG(svg)}") ${r + 1} ${r + 1}, crosshair`;
+  } else {
+    scroll.style.cursor = 'crosshair';
+  }
+}
+
+function freqToNote(hz) {
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const midi = Math.round(12 * Math.log2(hz / 440) + 69);
+  const octave = Math.floor(midi / 12) - 1;
+  const note = noteNames[midi % 12];
+  return `${note}${octave}`;
+}
+
+// ─── Elements ─────────────────────────────────────────────────────────────────
+const mainC  = document.getElementById('canvas-main');
+const overC  = document.getElementById('canvas-over');
+const wrapEl = document.getElementById('canvas-wrap');
+const scroll = document.getElementById('canvas-scroll');
+const rulerC = document.getElementById('ruler-canvas');
+const rulerPhC = document.getElementById('ruler-ph-canvas');
+const axisEl = document.getElementById('freq-axis');
+const hzEl   = document.getElementById('hz-readout');
+
+// ─── Canvas setup ─────────────────────────────────────────────────────────────
+mainC.width = CW; mainC.height = CH;
+overC.width = CW; overC.height = CH;
+
+// zoom: 1.0 = full size (CW px wide), 0.1 = 10% of CW
+let zoom = 1.0;
+
+function applySize() {
+  const h    = scroll.clientHeight;
+  const vw   = scroll.clientWidth || window.innerWidth;
+  // Never let the canvas be narrower than the visible viewport
+  const cssW = Math.max(Math.round(CW * zoom), vw);
+  wrapEl.style.width  = cssW + 'px';
+  wrapEl.style.height = h + 'px';
+  mainC.style.width   = cssW + 'px';
+  mainC.style.height  = h + 'px';
+  overC.style.width   = cssW + 'px';
+  overC.style.height  = h + 'px';
+  requestAnimationFrame(updateCanvasRect);
+}
+
+// ─── Canvas geometry cache ────────────────────────────────────────────────────
+let _canvasRect = { left: 0, top: 0, width: 0, height: 0 };
+let _scale = 1;
+let _cssH = 0;
+
+function updateCanvasRect() {
+  const r = scroll.getBoundingClientRect();
+  const cw = parseFloat(mainC.style.width) || r.width;
+  _canvasRect = { left: r.left, top: r.top, width: cw, height: r.height };
+  _scale = _canvasRect.width / CW;
+  _cssH = _canvasRect.height;
+}
+
+let _fitZoomPct = 100;
+
+function fitZoom() {
+  _strokeActive = false;
+  _pending = [];
+  const availW = scroll.clientWidth;
+  zoom = Math.max(0.05, availW / CW);
+  _fitZoomPct = Math.round(zoom * 100);
+  document.getElementById('sl-zoom').min = _fitZoomPct;
+  document.getElementById('sl-zoom').value = _fitZoomPct;
+  document.getElementById('v-zoom').textContent = _fitZoomPct + '%';
+  applySize();
+  drawRuler();
+}
+
+requestAnimationFrame(() => {
+  applySize();
+  fitZoom();
+  drawRuler();
+});
+window.addEventListener('resize', () => { applySize(); fitZoom(); drawRuler(); });
+window.addEventListener('scroll', updateCanvasRect);
+
+const mc = mainC.getContext('2d', { willReadFrequently: true });
+const oc = overC.getContext('2d');
+
+// ─── Grid ─────────────────────────────────────────────────────────────────────
+function drawGrid() {
+  // Pure black (#000) is critical: any non-zero pixel value activates oscillators.
+  // Grid lines use near-black so they're visible but pixel value stays ≤ 1/255.
+  mc.fillStyle = '#000000';
+  mc.fillRect(0, 0, CW, CH);
+  for (let o = 0; o <= OCT; o++) {
+    mc.strokeStyle = '#1E1C18'; mc.lineWidth = 1;
+    const y = Math.round(o / OCT * CH);
+    mc.beginPath(); mc.moveTo(0, y); mc.lineTo(CW, y); mc.stroke();
+  }
+  for (let s = 0; s <= OCT * 12; s++) {
+    mc.strokeStyle = '#141210'; mc.lineWidth = 1;
+    const y = Math.round(s / (OCT * 12) * CH);
+    mc.beginPath(); mc.moveTo(0, y); mc.lineTo(CW, y); mc.stroke();
+  }
+}
+drawGrid();
+
+// ─── Freq axis labels ─────────────────────────────────────────────────────────
+[
+  { n:'A9', hz:'14080', t:0.00 },
+  { n:'A8', hz:'7040',  t:0.10 },
+  { n:'A7', hz:'3520',  t:0.20 },
+  { n:'A6', hz:'1760',  t:0.30 },
+  { n:'A5', hz:'880',   t:0.40 },
+  { n:'A4', hz:'440',   t:0.50 },
+  { n:'A3', hz:'220',   t:0.60 },
+  { n:'A2', hz:'110',   t:0.70 },
+  { n:'A1', hz:'55',    t:0.80 },
+  { n:'A0', hz:'28',    t:0.90 },
+  { n:'Sub',hz:'20',    t:1.00 },
+].forEach(({ n, hz, t }) => {
+  const d = document.createElement('div');
+  d.className = 'freq-label';
+  d.style.top = `${t * 100}%`;
+  d.innerHTML = `${n}<small>${hz} Hz</small>`;
+  axisEl.appendChild(d);
+});
+
+// ─── Ruler ────────────────────────────────────────────────────────────────────
+let speed = 55; // pixels per second
+
+function drawRuler() {
+  const W = scroll.clientWidth || 800;
+  rulerC.width = W; rulerC.height = 22;
+  const rc = rulerC.getContext('2d');
+
+  rc.fillStyle = '#F0EDE6';
+  rc.fillRect(0, 0, W, 22);
+
+  // Bottom separator line
+  rc.strokeStyle = '#C4C0B8'; rc.lineWidth = 1;
+  rc.beginPath(); rc.moveTo(0, 21); rc.lineTo(W, 21); rc.stroke();
+
+  const scrollX  = scroll.scrollLeft;
+  const pxPerSec = speed * zoom; // CSS pixels per second
+
+  let tick = 0.5;
+  for (const t of [0.5,1,2,5,10,30,60,120]) {
+    if (t * pxPerSec > 50) { tick = t; break; }
+  }
+
+  rc.font = '8px Barlow, "Helvetica Neue", sans-serif';
+  rc.textAlign = 'center'; rc.lineWidth = 1;
+
+  const startT = Math.floor(scrollX / pxPerSec / tick) * tick;
+  for (let t = startT; t * pxPerSec < scrollX + W + 100; t += tick) {
+    const cx = t * pxPerSec, scrX = cx - scrollX;
+    if (scrX < -4 || scrX > W + 4) continue;
+    const major = Math.round(t / tick) % 5 === 0;
+    rc.strokeStyle = major ? '#A4A09A' : '#CCC8C0';
+    rc.beginPath(); rc.moveTo(scrX, major ? 8 : 14); rc.lineTo(scrX, 21); rc.stroke();
+    if (major) {
+      const m = Math.floor(t/60), s = Math.floor(t%60);
+      rc.fillStyle = '#A4A09A';
+      rc.fillText(m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`, scrX, 7);
+    }
+  }
+
+  // End-of-piece marker
+  const endX = Math.round(CW * _scale - scrollX);
+  if (endX >= 0 && endX <= W) {
+    rc.strokeStyle = 'rgba(212,79,0,0.4)';
+    rc.lineWidth = 1;
+    rc.setLineDash([3, 4]);
+    rc.beginPath();
+    rc.moveTo(endX, 0);
+    rc.lineTo(endX, 21);
+    rc.stroke();
+    rc.setLineDash([]);
+  }
+}
+
+// ─── Ruler scrubbing ──────────────────────────────────────────────────────────
+rulerC.style.cursor = 'col-resize';
+
+function handleRulerScrub(e) {
+  const rulerRect = rulerC.getBoundingClientRect();
+  const x = e.clientX - rulerRect.left + scroll.scrollLeft;
+  ph = x / _scale;
+  ph = Math.max(0, Math.min(CW - 1, ph));
+  phXf = ph;
+  lt = null; // reset loop timer
+
+  if (!playing) {
+    // Clear only old playhead area, then draw new one
+    const oldX = Math.floor(_prevPhXf) - 2;
+    const newX = Math.ceil(phXf) + 3;
+    const x0 = Math.min(oldX, Math.floor(phXf) - 2);
+    const x1 = Math.max(newX, Math.ceil(phXf) + 3);
+    oc.clearRect(x0, 0, x1 - x0 + 1, CH);
+
+    oc.save();
+    oc.strokeStyle = '#D44F00'; oc.lineWidth = 1; oc.globalAlpha = 0.85;
+    oc.beginPath(); oc.moveTo(phXf + 0.5, 0); oc.lineTo(phXf + 0.5, CH); oc.stroke();
+    oc.fillStyle = '#D44F00'; oc.globalAlpha = 1;
+    oc.fillRect(phXf - 1.5, 0, 3, 5);
+    oc.restore();
+    _prevPhXf = phXf;
+  }
+}
+
+rulerC.addEventListener('mousedown', e => {
+  _rulerDragging = true;
+  handleRulerScrub(e);
+});
+
+document.addEventListener('mousemove', e => {
+  if (_rulerDragging) {
+    handleRulerScrub(e);
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  _rulerDragging = false;
+});
+
+// ─── Ruler playhead (separate canvas) ──────────────────────────────────────────
+function updateRulerPlayhead(scrollX, phXf) {
+  const W = scroll.clientWidth || 800;
+  rulerPhC.width = W; rulerPhC.height = 22;
+  const rc = rulerPhC.getContext('2d');
+
+  if (playing) {
+    const sx = phXf * _scale - scrollX;
+    rc.fillStyle = '#D44F00';
+    rc.fillRect(sx - 1, 0, 2, 22);
+    // Orange triangle marker
+    rc.beginPath();
+    rc.moveTo(sx - 4, 0); rc.lineTo(sx + 4, 0); rc.lineTo(sx, 6);
+    rc.fillStyle = '#D44F00'; rc.fill();
+  }
+}
+scroll.addEventListener('scroll', drawRuler);
+
+// ─── Audio ────────────────────────────────────────────────────────────────────
+let ac = null, gains = [], oscs = [], masterGain = null;
+let _prevTarget = new Float32Array(NUM);
+let analyser = null, _vuBuffer = null, _frameCount2 = 0;
+let currentTimbre = 'sine';
+
+async function initAudio() {
+  if (ac) return;
+  ac = new AudioContext();
+  if (ac.state === 'suspended') await ac.resume();
+
+  // tanh soft limiter
+  const limiter = ac.createWaveShaper();
+  const n = 2048; const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = (Math.exp(2*x) - 1) / (Math.exp(2*x) + 1);
+  }
+  limiter.curve = curve; limiter.oversample = '4x';
+
+  // Soften compressor
+  const comp = ac.createDynamicsCompressor();
+  comp.threshold.value = -6; comp.knee.value = 12;
+  comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.25;
+
+  masterGain = ac.createGain();
+  masterGain.gain.value = +document.getElementById('sl-vol').value / 100;
+
+  masterGain.connect(comp);
+  comp.connect(limiter);
+
+  // VU meter analyser
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 256;
+  limiter.connect(analyser);
+  analyser.connect(ac.destination);
+  _vuBuffer = new Float32Array(analyser.fftSize);
+
+  for (let i = 0; i < NUM; i++) {
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = currentTimbre; osc.frequency.value = rowToFreq(i);
+    g.gain.value = 0; osc.connect(g); g.connect(masterGain); osc.start();
+    gains[i] = g;
+    oscs[i] = osc;
+  }
+}
+
+// ─── Playback ─────────────────────────────────────────────────────────────────
+let playing = false, ph = 0, lt = null, rafId = null, phX = 0, phXf = 0, _prevPhXf = 0;
+let _targetScrollLeft = 0, _frameCount = 0;
+
+function loop(ts) {
+  if (!playing) return;
+  if (lt !== null) ph = (ph + (ts - lt) / 1000 * speed) % CW;
+  lt = ts;
+
+  phXf = ph; // float, не floor
+  const phXi = Math.round(phXf); // только для getImageData
+  phX = phXi; // совместимость
+
+  // Read pixel column → oscillator gains (optimized)
+  const px = mc.getImageData(phXi, 0, 1, CH).data;
+  const now = ac.currentTime;
+  for (let i = 0; i < NUM; i++) {
+    const b = px[i * 4];
+    const tgt = b < THRESHOLD ? 0 : (b / 255) * MAX_GAIN;
+    if (Math.abs(tgt - _prevTarget[i]) > 1e-6) {
+      gains[i].gain.setTargetAtTime(tgt, now, SMOOTH);
+      _prevTarget[i] = tgt;
+    }
+  }
+
+  // Update VU meter every 4 frames
+  if (_frameCount2 % 4 === 0 && analyser) {
+    analyser.getFloatTimeDomainData(_vuBuffer);
+    let rms = 0;
+    for (let i = 0; i < _vuBuffer.length; i++) rms += _vuBuffer[i] ** 2;
+    rms = Math.sqrt(rms / _vuBuffer.length);
+    updateVU(rms);
+  }
+  _frameCount2++;
+
+  // Draw playhead on overlay canvas с адаптивным clearRect
+  const x0 = Math.floor(_prevPhXf) - 2;
+  const x1 = Math.ceil(phXf) + 3;
+  oc.clearRect(x0, 0, x1 - x0 + 1, CH);
+
+  oc.save();
+  oc.strokeStyle = '#D44F00'; oc.lineWidth = 1; oc.globalAlpha = 0.85;
+  oc.beginPath(); oc.moveTo(phXf + 0.5, 0); oc.lineTo(phXf + 0.5, CH); oc.stroke();
+  oc.fillStyle = '#D44F00'; oc.globalAlpha = 1;
+  oc.fillRect(phXf - 1.5, 0, 3, 5);
+  oc.restore();
+
+  _prevPhXf = phXf;
+
+  // Auto-scroll: if followMode enabled
+  let newScrollLeft = scroll.scrollLeft;
+  if (followMode) {
+    const cssX = phXf * _scale;
+    const vw   = scroll.clientWidth;
+    const rel  = cssX - scroll.scrollLeft;
+
+    if (rel > vw * 0.75 || rel < 0) {
+      newScrollLeft = cssX - vw * 0.25;
+      scroll.scrollLeft = newScrollLeft;
+    }
+  }
+
+  updateRulerPlayhead(newScrollLeft, phXf);
+
+  _frameCount++;
+
+  rafId = requestAnimationFrame(loop);
+}
+
+// ─── Rewind ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-rewind').addEventListener('click', () => {
+  ph = 0;
+  phXf = 0;
+  _prevPhXf = 0;
+  scroll.scrollLeft = 0;
+  lt = null;
+  if (!playing) {
+    oc.clearRect(0, 0, CW, CH);
+    oc.save();
+    oc.strokeStyle = '#D44F00'; oc.lineWidth = 1; oc.globalAlpha = 0.85;
+    oc.beginPath(); oc.moveTo(0.5, 0); oc.lineTo(0.5, CH); oc.stroke();
+    oc.fillStyle = '#D44F00'; oc.globalAlpha = 1;
+    oc.fillRect(-1.5, 0, 3, 5);
+    oc.restore();
+  }
+  drawRuler();
+});
+
+// ─── Play / Stop ──────────────────────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click', async () => {
+  await initAudio();
+  playing = !playing;
+  const btn = document.getElementById('btn-play');
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  if (playing) {
+    btn.textContent = '◼  Стоп'; btn.classList.add('on');
+    dot.classList.add('playing');
+    txt.textContent = 'Воспроизведение';
+    _frameCount = 0;
+    animateVU(true);
+    rafId = requestAnimationFrame(loop);
+  } else {
+    btn.textContent = '▶  Пуск'; btn.classList.remove('on');
+    dot.classList.remove('playing');
+    txt.textContent = 'Готов';
+    animateVU(false);
+    cancelAnimationFrame(rafId); lt = null;
+    _prevPhXf = phXf;
+    gains.forEach(g => g.gain.setTargetAtTime(0, ac.currentTime, 0.05));
+    oc.clearRect(0, 0, CW, CH);
+    rulerPhC.getContext('2d').clearRect(0, 0, rulerPhC.width, rulerPhC.height);
+    drawRuler();
+  }
+});
+
+// ─── VU ───────────────────────────────────────────────────────────────────────
+const vuBars = document.querySelectorAll('.vu-bar');
+function animateVU(on) {
+  vuBars.forEach((b, i) => {
+    b.style.height = on ? b.dataset.h + 'px' : '2px';
+    b.style.background = on ? (i>7?'#D44F00':i>5?'#C47820':'#5A5650') : 'var(--border)';
+    b.style.transitionDelay = i * 0.02 + 's';
+  });
+}
+
+function updateVU(rms) {
+  // Normalize RMS to 0-1 range (0.1 = reasonable peak)
+  const norm = Math.min(1, rms / 0.1);
+  vuBars.forEach((b, i) => {
+    const baseH = +b.dataset.h;
+    const variance = Math.random() * 0.15; // organic variation
+    const h = baseH * norm * (1 + variance);
+    b.style.height = Math.round(h) + 'px';
+  });
+}
+
+// ─── Tool buttons ─────────────────────────────────────────────────────────────
+let erasing = false, brushSize = 4;
+
+document.getElementById('btn-draw').addEventListener('click', () => {
+  erasing = false;
+  document.getElementById('btn-draw').classList.add('on-draw');
+  document.getElementById('btn-erase').classList.remove('on-erase');
+  updateCursor();
+});
+document.getElementById('btn-erase').addEventListener('click', () => {
+  erasing = true;
+  document.getElementById('btn-erase').classList.add('on-erase');
+  document.getElementById('btn-draw').classList.remove('on-draw');
+  updateCursor();
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  drawGrid(); ph = 0; phX = 0; scroll.scrollLeft = 0;
+  oc.clearRect(0, 0, CW, CH); drawRuler();
+});
+
+// ─── Zoom ─────────────────────────────────────────────────────────────────────
+document.getElementById('sl-zoom').addEventListener('input', e => {
+  _strokeActive = false;
+  _pending = [];
+  const val = +e.target.value;
+  // Snap to fit if very close
+  if (val <= _fitZoomPct + 1) {
+    zoom = _fitZoomPct / 100;
+    e.target.value = _fitZoomPct;
+    document.getElementById('v-zoom').textContent = _fitZoomPct + '%';
+  } else {
+    zoom = val / 100;
+    document.getElementById('v-zoom').textContent = Math.round(zoom * 100) + '%';
+  }
+  applySize(); drawRuler(); updateCursor();
+});
+document.getElementById('btn-fit').addEventListener('click', fitZoom);
+
+// ─── Speed ────────────────────────────────────────────────────────────────────
+document.getElementById('sl-speed').addEventListener('input', e => {
+  speed = +e.target.value;
+  document.getElementById('v-speed').textContent = speed;
+  drawRuler();
+});
+document.getElementById('sl-vol').addEventListener('input', e => {
+  if (masterGain) masterGain.gain.value = +e.target.value / 100;
+  document.getElementById('v-vol').textContent = e.target.value + '%';
+});
+document.getElementById('sl-brush').addEventListener('input', e => {
+  brushSize = +e.target.value;
+  document.getElementById('v-brush').textContent = brushSize + ' px';
+  updateCursor();
+});
+
+// ─── Follow mode (auto-scroll enabled by default) ─────────────────────────────
+let followMode = true;  // Always enabled
+
+// ─── Hotkeys ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+
+  switch(e.code) {
+    case 'Space':
+      e.preventDefault();
+      document.getElementById('btn-play').click();
+      break;
+    case 'KeyF':
+      fitZoom();
+      break;
+    case 'KeyD':
+      document.getElementById('btn-draw').click();
+      break;
+    case 'KeyE':
+      document.getElementById('btn-erase').click();
+      break;
+    case 'BracketLeft':
+      brushSize = Math.max(1, brushSize - 1);
+      document.getElementById('sl-brush').value = brushSize;
+      document.getElementById('v-brush').textContent = brushSize + ' px';
+      break;
+    case 'BracketRight':
+      brushSize = Math.min(40, brushSize + 1);
+      document.getElementById('sl-brush').value = brushSize;
+      document.getElementById('v-brush').textContent = brushSize + ' px';
+      break;
+  }
+});
+
+// ─── Timbre ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('#timbre-group .btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentTimbre = btn.dataset.type;
+    // Update UI
+    document.querySelectorAll('#timbre-group .btn').forEach(b => b.classList.remove('on-draw'));
+    btn.classList.add('on-draw');
+    // Update all oscillators
+    if (oscs.length > 0) {
+      for (let i = 0; i < NUM; i++) {
+        oscs[i].type = currentTimbre;
+      }
+    }
+  });
+});
+
+// ─── Import with speed restore ────────────────────────────────────────────────
+document.getElementById('import-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+
+  // Try to extract speed from filename
+  const match = f.name.match(/(\d+)pxs/);
+  if (match) {
+    const spxs = parseInt(match[1]);
+    speed = spxs;
+    document.getElementById('sl-speed').value = spxs;
+    document.getElementById('v-speed').textContent = spxs;
+    drawRuler();
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    mc.fillStyle = '#000000'; mc.fillRect(0, 0, CW, CH);
+    mc.drawImage(img, 0, 0, CW, CH);
+    const id = mc.getImageData(0, 0, CW, CH), d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const l = d[i]*.299 + d[i+1]*.587 + d[i+2]*.114;
+      d[i] = d[i+1] = d[i+2] = l; d[i+3] = 255;
+    }
+    mc.putImageData(id, 0, 0); URL.revokeObjectURL(img.src);
+    scheduleAutoSave(); // Save after import
+  };
+  img.src = URL.createObjectURL(f); e.target.value = '';
+});
+
+// ─── Drawing ──────────────────────────────────────────────────────────────────
+let _strokeActive = false, _strokeFresh = false;
+let _pending = [];
+let lastX = 0, lastY = 0;
+let _prevPreviewX = null, _prevPreviewY = null, _prevGuideY = null;
+let _rulerDragging = false;
+
+function getPos(e) {
+  return {
+    x: Math.max(0, Math.min(CW - 1,
+         (e.clientX - _canvasRect.left + scroll.scrollLeft) / _scale)),
+    y: Math.max(0, Math.min(CH - 1,
+         (e.clientY - _canvasRect.top) / _canvasRect.height * CH)),
+  };
+}
+
+function flushDraw() {
+  if (_pending.length === 0) return;
+  mc.strokeStyle = erasing ? '#000000' : 'rgba(255,252,245,0.92)';
+  mc.lineWidth = brushSize;
+  mc.lineCap = 'round';
+  mc.lineJoin = 'round';
+  mc.beginPath();
+  if (_strokeFresh) {
+    mc.moveTo(_pending[0].x, _pending[0].y);
+    _strokeFresh = false;
+  } else {
+    mc.moveTo(lastX, lastY);
+  }
+  for (const p of _pending) {
+    mc.lineTo(p.x, p.y);
+  }
+  mc.stroke();
+  lastX = _pending[_pending.length - 1].x;
+  lastY = _pending[_pending.length - 1].y;
+  _pending = [];
+}
+
+scroll.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  const p = getPos(e);
+  _pending = [p];
+  _strokeFresh = true;
+  _strokeActive = true;
+  lastX = p.x;
+  lastY = p.y;
+  flushDraw();
+});
+
+scroll.addEventListener('mousemove', e => {
+  const cy = e.clientY - _canvasRect.top;
+  const row = Math.max(0, Math.min(NUM - 1, Math.floor(cy / _canvasRect.height * CH)));
+  const hz = rowToFreq(row);
+  const note = freqToNote(hz);
+  hzEl.textContent = `${note} · ${Math.round(hz)} Гц`;
+  hzEl.style.display = 'block';
+
+  const p = getPos(e);
+
+  // Brush preview (when not drawing)
+  if (!_strokeActive) {
+    // Clear old preview
+    if (_prevPreviewX !== null) {
+      const px = Math.round(brushSize / 2) + 2;
+      oc.clearRect(_prevPreviewX - px, _prevPreviewY - px, brushSize + 4, brushSize + 4);
+    }
+    // Draw new preview
+    oc.strokeStyle = 'rgba(255,255,255,0.4)';
+    oc.lineWidth = 1;
+    oc.beginPath();
+    oc.arc(p.x, p.y, Math.max(0.5, brushSize / 2), 0, Math.PI * 2);
+    oc.stroke();
+    _prevPreviewX = p.x;
+    _prevPreviewY = p.y;
+
+    // Horizontal guide
+    if (_prevGuideY !== null) {
+      oc.clearRect(0, _prevGuideY - 1, CW, 2);
+    }
+    oc.strokeStyle = 'rgba(255,255,255,0.08)';
+    oc.lineWidth = 1;
+    oc.setLineDash([4, 8]);
+    oc.beginPath();
+    oc.moveTo(0, p.y);
+    oc.lineTo(CW, p.y);
+    oc.stroke();
+    oc.setLineDash([]);
+    _prevGuideY = p.y;
+  }
+
+  if (!_strokeActive) return;
+  _pending.push(p);
+  flushDraw();
+});
+
+scroll.addEventListener('mouseup', () => {
+  if (_strokeActive && _pending.length > 0) flushDraw();
+  _strokeActive = false;
+  scheduleAutoSave();
+});
+
+scroll.addEventListener('mouseleave', () => {
+  if (_strokeActive && _pending.length > 0) flushDraw();
+  _strokeActive = false;
+  hzEl.style.display = 'none';
+
+  // Clear preview and guide
+  if (_prevPreviewX !== null) {
+    const px = Math.round(brushSize / 2) + 2;
+    oc.clearRect(_prevPreviewX - px, _prevPreviewY - px, brushSize + 4, brushSize + 4);
+    _prevPreviewX = null;
+    _prevPreviewY = null;
+  }
+  if (_prevGuideY !== null) {
+    oc.clearRect(0, _prevGuideY - 1, CW, 2);
+    _prevGuideY = null;
+  }
+
+  scheduleAutoSave();
+});
+
+// ─── Auto-save to localStorage ────────────────────────────────────────────────
+let _autoSaveTimer = null;
+
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    try {
+      const data = mainC.toDataURL('image/png');
+      localStorage.setItem('ans-autosave-canvas', data);
+      localStorage.setItem('ans-autosave-speed', speed);
+      localStorage.setItem('ans-autosave-time', Date.now());
+    } catch(e) {
+      // quota exceeded or disabled
+    }
+  }, 2000);
+}
+
+// ─── Auto-restore on load (silent, no UI) ─────────────────────────────────────
+window.addEventListener('load', () => {
+  try {
+    const data = localStorage.getItem('ans-autosave-canvas');
+    if (!data) return;
+    const img = new Image();
+    img.onload = () => {
+      mc.fillStyle = '#000000'; mc.fillRect(0, 0, CW, CH);
+      mc.drawImage(img, 0, 0, CW, CH);
+      const id = mc.getImageData(0, 0, CW, CH), d = id.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const l = d[i]*.299 + d[i+1]*.587 + d[i+2]*.114;
+        d[i] = d[i+1] = d[i+2] = l; d[i+3] = 255;
+      }
+      mc.putImageData(id, 0, 0);
+    };
+    img.src = data;
+    const savedSpeed = localStorage.getItem('ans-autosave-speed');
+    if (savedSpeed) {
+      speed = parseFloat(savedSpeed);
+      document.getElementById('sl-speed').value = Math.round(speed);
+      document.getElementById('v-speed').textContent = Math.round(speed);
+      drawRuler();
+    }
+  } catch(e) {}
+});
+</script>
+</body>
+</html>
