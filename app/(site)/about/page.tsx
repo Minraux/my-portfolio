@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Автор',
     openGraph: {
-      ...(ogImage && { images: [{ url: urlFor(about.photo).width(560).auto('format').url() }] }),
+      ...(ogImage && { images: [{ url: urlFor(about.photo).width(1200).auto('format').url(), width: 1200 }] }),
     },
   }
 }
@@ -26,7 +26,7 @@ export default async function AboutPage() {
       <div style={{ width: 280, flexShrink: 0 }}>
         {about?.photo && (
           <img
-            src={urlFor(about.photo).width(560).url()}
+            src={urlFor(about.photo).width(800).auto('format').url()}
             alt="Автор"
             style={{ width: '100%', display: 'block' }}
           />

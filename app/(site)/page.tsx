@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = settings?.heroImage?.url
   return {
     openGraph: {
-      ...(ogImage && { images: [{ url: urlFor(settings.heroImage).width(1600).auto('format').url() }] }),
+      ...(ogImage && { images: [{ url: urlFor(settings.heroImage).width(1200).height(630).fit('crop').auto('format').url(), width: 1200, height: 630 }] }),
     },
   }
 }
