@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { PortableText } from '@portabletext/react'
 import { getWork, getAllWorks } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
+import MediaPlayer from '@/components/MediaPlayer'
 
 export async function generateStaticParams() {
   const works = await getAllWorks()
@@ -43,6 +44,8 @@ const bodyComponents = {
     embed: ({ value }: any) => (
       <div dangerouslySetInnerHTML={{ __html: value.code }} style={{ margin: '24px 0' }} />
     ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    media: ({ value }: any) => <MediaPlayer value={value} />,
   },
   marks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
