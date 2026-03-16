@@ -160,6 +160,7 @@ a.text-link:hover {
 }
 
 .article-body blockquote {
+  border-left: 4px solid #444444;
   font-style: italic;
   color: #ffffff;
   margin: 32px 0;
