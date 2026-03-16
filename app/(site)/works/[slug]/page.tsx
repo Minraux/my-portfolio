@@ -46,14 +46,16 @@ const bodyComponents = {
     ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     media: ({ value }: any) => <MediaPlayer value={value} />,
+  },
+  block: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    block: ({ value, children }: any) => {
-      const style = value?.style || 'normal'
-      if (style === 'h2') return <h2>{children}</h2>
-      if (style === 'h3') return <h3>{children}</h3>
-      if (style === 'blockquote') return <blockquote>{children}</blockquote>
-      return <p>{children}</p>
-    },
+    h2: ({ children }: any) => <h2>{children}</h2>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    h3: ({ children }: any) => <h3>{children}</h3>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    blockquote: ({ children }: any) => <blockquote>{children}</blockquote>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    normal: ({ children }: any) => <p>{children}</p>,
   },
   marks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,7 +152,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
       {/* Аудио-файл под сеткой */}
       {work.mediaType === 'file' && work.mediaFile && (
         <div style={{ marginBottom: 40, borderTop: '1px solid #1e1e1e', paddingTop: 40 }}>
-          <audio controls src={work.mediaFile} style={{ width: '100%' }} />
+          <audio controls controlsList="nodownload" src={work.mediaFile} style={{ width: '100%' }} />
         </div>
       )}
 
