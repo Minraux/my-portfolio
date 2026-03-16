@@ -143,6 +143,29 @@ a.text-link:hover {
 .article-body p { margin-bottom: 1.2em; }
 .article-body p:last-child { margin-bottom: 0; }
 
+.article-body h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 24px;
+  color: #ffffff;
+}
+
+.article-body h3 {
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.article-body blockquote {
+  font-style: italic;
+  color: #ffffff;
+  margin: 32px 0;
+  padding: 16px;
+}
+
 /* Andromatic page styles override */
 .andromatic-page,
 .andromatic-page * {
