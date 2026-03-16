@@ -10,9 +10,9 @@ export default function MediaPlayer({ value }: any) {
   return (
     <div style={{ marginBottom: 40, borderTop: '1px solid #1e1e1e', paddingTop: 40 }}>
       {mediaType === 'audio' ? (
-        <audio controls src={fileUrl} style={{ width: '100%' }} />
+        <audio controls src={fileUrl} controlsList="nodownload" style={{ width: '100%' }} />
       ) : (
-        <video controls src={fileUrl} style={{ width: '100%' }} />
+        <video controls src={fileUrl} controlsList="nodownload" style={{ width: '100%' }} />
       )}
     </div>
   )
