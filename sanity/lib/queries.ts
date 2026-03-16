@@ -43,7 +43,8 @@ export async function getPost(slug: string) {
     "coverImage": coverImage { ..., "url": asset->url },
     body[] {
       ...,
-      _type == "image" => { ..., "url": asset->url }
+      _type == "image" => { ..., "url": asset->url },
+      _type == "media" => { ..., "file": file.asset->url }
     },
     seo { title, description, "ogImage": ogImage { ..., "url": asset->url } }
   }`, { slug }, { next: { revalidate: 300 } })
