@@ -46,6 +46,14 @@ const bodyComponents = {
     ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     media: ({ value }: any) => <MediaPlayer value={value} />,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    block: ({ value, children }: any) => {
+      const style = value?.style || 'normal'
+      if (style === 'h2') return <h2>{children}</h2>
+      if (style === 'h3') return <h3>{children}</h3>
+      if (style === 'blockquote') return <blockquote>{children}</blockquote>
+      return <p>{children}</p>
+    },
   },
   marks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
