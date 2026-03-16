@@ -19,6 +19,7 @@ export const post = defineType({
         { type: 'block' },
         { type: 'image', options: { hotspot: true } },
         { type: 'object', name: 'embed', title: 'Встраиваемый блок', fields: [{ name: 'code', type: 'text', title: 'Код для вставки' }] },
+        { type: 'object', name: 'media', title: 'Аудио/видео файл', fields: [{ name: 'file', type: 'file', title: 'Файл', validation: r => r.required() }, { name: 'mediaType', type: 'string', title: 'Тип', options: { list: [{ title: 'Аудио', value: 'audio' }, { title: 'Видео', value: 'video' }] }, validation: r => r.required() }], preview: { select: { mediaType: 'mediaType', filename: 'file.asset->originalFilename' }, prepare: ({ mediaType, filename }) => ({ title: (mediaType === 'audio' ? '🎵 ' : '🎬 ') + (filename || 'Без названия') }) } },
       ],
     }),
     defineField({ name: 'featured', title: 'Показать на главной', type: 'boolean', initialValue: false }),
